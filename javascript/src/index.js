@@ -14,7 +14,11 @@ import MovePanelContainer from './containers/MovePanelContainer';
 import Config from './stores/Config';
 
 const initialState = {
-	config: window.KickAssetsConfig
+	config: window.KickAssetsConfig,
+	selectedItems: {
+		data: [],
+		multi: false
+	}
 };
 
 const store = configureStore(initialState); // Creates the Redux store

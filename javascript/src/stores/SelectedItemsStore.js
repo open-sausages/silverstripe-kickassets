@@ -16,14 +16,6 @@ const SelectedItemsStore = Reflux.createStore({
 
 	mixins: [ImmutableStoreMixin(_state)],
 
-	onActivateMultiSelect () {		
-		_state.multi = true;
-	},
-
-	onDeactivateMultiSelect () {		
-		_state.multi = false;
-	},
-
 	onToggleSelection (id) {
 		const index = this.indexForID(id);
 		const found = (index > -1);

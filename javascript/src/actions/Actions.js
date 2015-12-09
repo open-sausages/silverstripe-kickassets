@@ -21,8 +21,6 @@ const Actions = Reflux.createActions({
 	'addFile': {},
 	'removeFile': {},
 	'insertFolder': {},
-	'activateMultiSelect': {},
-	'deactivateMultiSelect': {},
 	'toggleSelection': {},
 	'groupSelect': {},
 	'clearSelection': {},

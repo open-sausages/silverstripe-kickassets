@@ -1,6 +1,8 @@
 import React from 'react/addons';
 import Router from 'react-router';
+import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import * as selectedItemsActions from '../actions/selectedItemsActions';
 import TopBar from '../views/TopBar';
 import BrowseBar from '../views/BrowseBar';
 import Browse from './Browse';
@@ -37,14 +39,14 @@ const Main = React.createClass({
 	},
 
 	keyDownListener (e) {
-		if(e.metaKey && !SelectedItemsStore.get('multi')) {
-			Actions.activateMultiSelect();
+		if(e.metaKey && this.props.selectedItems.multi === false) {
+			this.props.actions.activateMultiSelect();
 		}
 	},
 
 	keyUpListener (e) {
-		if(!e.metaKey && SelectedItemsStore.get('multi')) {
-			Actions.deactivateMultiSelect();
+		if(!e.metaKey && this.props.selectedItems.multi === true) {
+			this.props.actions.deactivateMultiSelect();
 		}
 	},
 
@@ -89,8 +91,15 @@ const Main = React.createClass({
 
 function mapStateToProps(state) {
 	return {
-		config: state.config
+		config: state.config,
+		selectedItems: state.selectedItems
 	}
 }
 
-export default connect(mapStateToProps)(Main);
+function mapDispatchToProps(dispatch) {
+	return {
+		actions: bindActionCreators(selectedItemsActions, dispatch)
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Main);

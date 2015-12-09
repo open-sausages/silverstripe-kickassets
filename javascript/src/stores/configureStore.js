@@ -4,6 +4,7 @@
 
 import { createStore, applyMiddleware } from 'redux';
 import thunkMiddleware from 'redux-thunk'; // Used for handling async store updates.
+import createLogger from 'redux-logger'; // Logs state changes to the console. Useful for debugging.
 import rootReducer from '../reducers';
 
 /**
@@ -14,7 +15,8 @@ import rootReducer from '../reducers';
  * @private
  */
 const createStoreWithMiddleware = applyMiddleware(
-	thunkMiddleware
+	thunkMiddleware,
+	createLogger()
 )(createStore);
 
 /**

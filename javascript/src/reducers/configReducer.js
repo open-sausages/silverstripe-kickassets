@@ -9,7 +9,7 @@ const initialState = {
 };
 
 /**
- * @func config
+ * @func configReducer
  * @param object initialState
  * @param object action - The dispatched action.
  * @param string action.type - Name of the dispatched action.

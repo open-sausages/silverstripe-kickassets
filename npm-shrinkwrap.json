@@ -1780,6 +1780,11 @@
       "from": "redux@*",
       "resolved": "https://registry.npmjs.org/redux/-/redux-3.0.4.tgz"
     },
+    "redux-logger": {
+      "version": "2.1.4",
+      "from": "redux-logger@*",
+      "resolved": "https://registry.npmjs.org/redux-logger/-/redux-logger-2.1.4.tgz"
+    },
     "redux-thunk": {
       "version": "1.0.0",
       "from": "redux-thunk@*",
