@@ -1,10 +1,10 @@
 import React from 'react/addons';
+import { connect } from 'react-redux';
 import Truncator from './Truncator';
 import classNames from 'classnames';
 import {DropdownButton, Glyphicon, MenuItem} from 'react-bootstrap';
 import FolderItemImage from './FolderItemImage';
 import ErrorOverlay from './ErrorOverlay';
-import Config from '../stores/Config';
 import _t from '../utils/lang';
 
 const FolderItem = React.createClass({
@@ -45,7 +45,7 @@ const FolderItem = React.createClass({
 	componentWillReceiveProps (nextProps) {
 		this.setState({
 			modifiedData: nextProps.data
-		});		
+		});
 	},
 
 	componentDidMount () {
@@ -70,15 +70,15 @@ const FolderItem = React.createClass({
 			e.stopPropagation();
 		}
 		if(this.props.data.canEdit === false) return;
-		
+
 		document.addEventListener('click', this.clickListener);
 		document.addEventListener('keyup', this.keyListener);
-		
+
 		this.props.onEditFilename && this.props.onEditFilename();
 
 		this.setState({
 			isEditing: true
-		}, () => {		
+		}, () => {
 			React.findDOMNode(this.refs.filename).select();
 		});
 	},
@@ -86,11 +86,11 @@ const FolderItem = React.createClass({
 	uneditFilename () {
 		document.removeEventListener('click', this.clickListener);
 		document.removeEventListener('keyup', this.keyListener);
-		
+
 		this.props.onUneditFilename && this.props.onUneditFilename();
-		
+
 		this.setState({
-			isEditing: false			
+			isEditing: false
 		});
 	},
 
@@ -115,10 +115,10 @@ const FolderItem = React.createClass({
 		});
 	},
 
-	handleFilenameUpdate (e) {			
+	handleFilenameUpdate (e) {
 		const newTitle = e.target.value.trim();
 
-		if(!newTitle) {			
+		if(!newTitle) {
 			return this.reset();
 		}
 
@@ -133,8 +133,8 @@ const FolderItem = React.createClass({
 		}
 	},
 
-	keyListener (e) {		
-		if(e.keyCode === 13) {			
+	keyListener (e) {
+		if(e.keyCode === 13) {
 			this.handleFilenameUpdate(e);
 		}
 
@@ -143,18 +143,18 @@ const FolderItem = React.createClass({
 		}
 	},
 
-	handleAction (action) {		
+	handleAction (action) {
 		switch (action) {
 			case 'edit':
 				this.props.onEdit && this.props.onEdit(this.props.data);
 			break;
 
 			case 'move':
-				this.props.onMove && this.props.onMove(this.props.data);				
+				this.props.onMove && this.props.onMove(this.props.data);
 			break;
 
 			case 'delete':
-				this.props.onDelete && this.props.onDelete(this.props.data);				
+				this.props.onDelete && this.props.onDelete(this.props.data);
 			break;
 		}
 	},
@@ -162,7 +162,7 @@ const FolderItem = React.createClass({
 	reset () {
 		this.updateData('title', this.props.data.title);
 
-		return this.uneditFilename();	
+		return this.uneditFilename();
 	},
 
 	updateData (k, v) {
@@ -176,7 +176,7 @@ const FolderItem = React.createClass({
 
 	getClasses () {
 		const c = classNames({
-			'file-box': true,			
+			'file-box': true,
 			'selected': this.props.selected,
 			'editing': this.props.editing,
 			'list': this.props.layout === 'list',
@@ -197,17 +197,17 @@ const FolderItem = React.createClass({
 
 	getTitle () {
 		const title = this.props.data.title ? this.props.data.title.trim() : null;
-		
+
 		return title || '\u00a0';
 	},
 
 	getExtension () {
-		return this.props.data.extension === Config.get('folderExtension') ? 'folder' : this.props.data.extension;
+		return this.props.data.extension === this.props.config.folderExtension ? 'folder' : this.props.data.extension;
 	},
 
 	renderFilename () {
 		const preview = this.props.data.isNew && this.props.data.type !== 'folder';
-		
+
 		if(!preview && !this.state.isEditing) {
 			return <Truncator onDoubleClick={this.editFilename} className="wrap">{this.getTitle()}</Truncator>
 		}
@@ -228,8 +228,8 @@ const FolderItem = React.createClass({
 		}
 	},
 
-	renderProgress () {		
-		return 	(
+	renderProgress () {
+		return (
 			<div className="progress">
 				<div className="progress-bar" role="progressbar" style={{width: `${this.props.data.progress}%`}} />
 			</div>
@@ -242,32 +242,32 @@ const FolderItem = React.createClass({
 		const {data} = this.props;
 
 		return (
-	        <div className="file-action badged-button">
-	        	{this.props.selectedCount > 1 && this.props.selected &&
-	        		<span className="badge badge-danger">{this.props.selectedCount}</span>
-	        	}
-	        	{(data.canEdit || data.canDelete) && 
-		            <DropdownButton noCaret onSelect={this.handleAction} title={cog}>
+			<div className="file-action badged-button">
+				{this.props.selectedCount > 1 && this.props.selected &&
+					<span className="badge badge-danger">{this.props.selectedCount}</span>
+				}
+				{(data.canEdit || data.canDelete) && 
+					<DropdownButton noCaret onSelect={this.handleAction} title={cog}>
 						{data.canEdit &&
 							<MenuItem eventKey='edit'><Glyphicon glyph="edit" />{space}{_t('KickAssets.EDIT','Edit')}</MenuItem>
 						}
 						{data.canEdit &&
 							<MenuItem eventKey='move'><Glyphicon glyph="share" />{space}{_t('KickAssets.MOVETO','Move to...')}</MenuItem>
 						}
-						{data.canDelete && Config.get('canDelete') &&
-							<MenuItem eventKey='delete'><Glyphicon glyph="trash" />{space}{_t('KickAssets.DELETE','Delete')}</MenuItem>					
+						{data.canDelete && this.props.config.canDelete &&
+							<MenuItem eventKey='delete'><Glyphicon glyph="trash" />{space}{_t('KickAssets.DELETE','Delete')}</MenuItem>
 						}
 					</DropdownButton>
 				}
-	        </div>
-	    );
+			</div>
+		);
 	},
 
 	renderError () {
 		return (
 			<ErrorOverlay header={_t('KickAssets.OHNO','Oh no!')} onAccept={this.props.onClearError}>
 				{this.props.data.error}
-			</ErrorOverlay>		
+			</ErrorOverlay>
 		);
 	},
 
@@ -275,55 +275,55 @@ const FolderItem = React.createClass({
 		const {data} = this.props;
 
 		return (
-        <div {...this.props} className={this.getClasses()} onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
-            {data.error && this.renderError()}
+		<div {...this.props} className={this.getClasses()} onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
+			{data.error && this.renderError()}
 
-            <div className={`folder-item-cell ${this.getType()}`}>
-                <FolderItemImage {...data} />
-            </div>
-            <div className="folder-item-cell file-name">
-            	{this.renderFilename()}
-            </div>
-            <div className="folder-item-cell file-created">
-            	{this.getCreated()}
-            </div>
-            <div className="folder-item-cell file-kind">
-            	{this.getExtension()}
-            </div>
+			<div className={`folder-item-cell ${this.getType()}`}>
+				<FolderItemImage {...data} />
+			</div>
+			<div className="folder-item-cell file-name">
+				{this.renderFilename()}
+			</div>
+			<div className="folder-item-cell file-created">
+				{this.getCreated()}
+			</div>
+			<div className="folder-item-cell file-kind">
+				{this.getExtension()}
+			</div>
 
-            <div className="folder-item-cell action">
-            	{this.state.showAction && this.renderAction()}
-            </div>
+			<div className="folder-item-cell action">
+				{this.state.showAction && this.renderAction()}
+			</div>
 
 			{data.progress && this.renderProgress()}
-        </div>
-        );
+		</div>
+		);
 
 	},
 
 	renderGrid () {
-		const {data} = this.props;		
+		const {data} = this.props;
 		return (
-		<div className="ka-folder-item-wrap">			
-	        <div {...this.props} className={this.getClasses()}>
-	            <div className="file" onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>                
-		            {data.error && this.renderError()}
-	                
-	                <span className="corner"></span>
+		<div className="ka-folder-item-wrap">
+			<div {...this.props} className={this.getClasses()}>
+				<div className="file" onMouseEnter={this.handleMouseEnter} onMouseLeave={this.handleMouseLeave}>
+					{data.error && this.renderError()}
 
-	                <div className={`file-preview ${this.getType()}`}>
-	                    <FolderItemImage {...data} />
-	                </div>
-	                <div className="file-name">
-	                	{this.renderFilename()}
-	                    <small>{_t('KickAssets.ADDED','Added')}: {this.getCreated()}</small>
-	                </div>
-	                {this.state.showAction && this.renderAction()}
+					<span className="corner"></span>
+
+					<div className={`file-preview ${this.getType()}`}>
+						<FolderItemImage {...data} />
+					</div>
+					<div className="file-name">
+						{this.renderFilename()}
+						<small>{_t('KickAssets.ADDED','Added')}: {this.getCreated()}</small>
+					</div>
+					{this.state.showAction && this.renderAction()}
 					{data.progress && this.renderProgress()}
-	            </div>
-	        </div>
-        </div>
-        );
+				</div>
+			</div>
+		</div>
+		);
 	},
 
 	render () {
@@ -333,4 +333,10 @@ const FolderItem = React.createClass({
 
 });
 
-export default FolderItem;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(FolderItem);

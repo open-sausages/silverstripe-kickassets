@@ -1,10 +1,10 @@
 import React from 'react/addons';
+import { connect } from 'react-redux';
 import SearchFormContainer from '../containers/SearchFormContainer';
 import SortDropdownContainer from '../containers/SortDropdownContainer';
 import ViewToggleContainer from '../containers/ViewToggleContainer';
 import SelectionButtonContainer from '../containers/SelectionButtonContainer';
 import Navigation from '../actions/Navigation';
-import Config from '../stores/Config';
 import _t from '../utils/lang';
 
 const TopBar = React.createClass({
@@ -26,7 +26,7 @@ const TopBar = React.createClass({
 					<SearchFormContainer routerParams={this.props.routerParams} />
 				</div>
 				<div className="ka-tools">
-				{Config.get('allowSelection') &&
+				{this.props.config.allowSelection &&
 					<SelectionButtonContainer />
 				}
 					<SortDropdownContainer routerParams={this.props.routerParams} />
@@ -37,4 +37,10 @@ const TopBar = React.createClass({
 	}
 });
 
-export default TopBar;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(TopBar);

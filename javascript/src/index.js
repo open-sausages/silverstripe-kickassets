@@ -13,14 +13,18 @@ import SearchPanelContainer from './containers/SearchPanelContainer';
 import MovePanelContainer from './containers/MovePanelContainer';
 import Config from './stores/Config';
 
-const store = configureStore(); // Creates the Redux store
+const initialState = {
+	config: window.KickAssetsConfig
+};
+
+const store = configureStore(initialState); // Creates the Redux store
 
 const Route = Router.Route;
 
 Config.init(window.KickAssetsConfig);
 
 const routes = (
-	<Route path={Config.get('baseRoute')} name="home" handler={KickAssets}>
+	<Route path={store.getState().config.baseRoute} name="home" handler={KickAssets}>
 		<Route name="main" path="show/:folderID" handler={Main}>
 			<Route name="edit" path="edit/:fileID" handler={ItemEditFormContainer} />
 			<Route name="search" path="search" handler={SearchPanelContainer} />

@@ -1,8 +1,8 @@
 import React from 'react';
-import Config from '../stores/Config';
+import { connect } from 'react-redux';
 
 const FolderItemImage = React.createClass({
-	
+
 	propTypes: {
 		type: React.PropTypes.oneOf(['image', 'file', 'folder']),
 		iconURL: React.PropTypes.string,
@@ -16,7 +16,7 @@ const FolderItemImage = React.createClass({
 		}
 	},
 
-	componentWillReceiveProps (nextProps) {		
+	componentWillReceiveProps (nextProps) {
 		this.setState({
 			src: nextProps.iconURL || this.getIconPath(nextProps.extension)
 		});
@@ -24,10 +24,10 @@ const FolderItemImage = React.createClass({
 
 	getIconPath () {
 		const ext = this.props.extension || this.props.title.split('.').pop().toLowerCase(),
-			  iconSize = Config.get('iconSize'),
-			  thumbnailsDir = Config.get('thumbnailsDir');
+			  iconSize = this.props.config.iconSize,
+			  thumbnailsDir = this.props.config.thumbnailsDir;
 
-		return `${thumbnailsDir}/${iconSize}px/${ext}.png`;	
+		return `${thumbnailsDir}/${iconSize}px/${ext}.png`;
 	},
 
 	showBlank () {
@@ -41,4 +41,10 @@ const FolderItemImage = React.createClass({
 	}
 });
 
-export default FolderItemImage;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(FolderItemImage);

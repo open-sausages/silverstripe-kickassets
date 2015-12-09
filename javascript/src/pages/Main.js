@@ -1,5 +1,6 @@
 import React from 'react/addons';
 import Router from 'react-router';
+import { connect } from 'react-redux';
 import TopBar from '../views/TopBar';
 import BrowseBar from '../views/BrowseBar';
 import Browse from './Browse';
@@ -7,7 +8,6 @@ import Actions from '../actions/Actions';
 import Navigation from '../actions/Navigation';
 import Immutable from 'immutable';
 import SelectedItemsStore from '../stores/SelectedItemsStore';
-import Config from '../stores/Config';
 
 const Main = React.createClass({
 
@@ -36,13 +36,13 @@ const Main = React.createClass({
 		this.loadRouterParams(nextProps);
 	},
 
-	keyDownListener (e) {		
+	keyDownListener (e) {
 		if(e.metaKey && !SelectedItemsStore.get('multi')) {
 			Actions.activateMultiSelect();
 		}
 	},
 
-	keyUpListener (e) {		
+	keyUpListener (e) {
 		if(!e.metaKey && SelectedItemsStore.get('multi')) {
 			Actions.deactivateMultiSelect();
 		}
@@ -53,11 +53,11 @@ const Main = React.createClass({
 		const newParams = Immutable.Map({
 			folderParams: Immutable.Map({
 				folderID: props.params.folderID,
-				sort: props.query.sort || Config.get('defaultSort')
+				sort: props.query.sort || props.config.defaultSort
 			}),
 			fileID: props.params.fileID,
 			search: props.query.q,
-			view: props.query.view || Config.get('defaultView'),
+			view: props.query.view || props.config.defaultView,
 			path: this.context.router.getCurrentPathname(),
 			recent: props.params.folderID === 'recent'
 		});
@@ -69,7 +69,7 @@ const Main = React.createClass({
 		}
 	},
 
-	render() {	
+	render() {
 		if(!this.state.routerParams.get('folderParams')) return <div />;
 
 		return (
@@ -78,8 +78,8 @@ const Main = React.createClass({
 				{!this.state.routerParams.get('recent') &&
 					<BrowseBar routerParams={this.state.routerParams} />
 				}
-	            <div className="ka-folder-items">
-	            	<Browse routerParams={this.state.routerParams} />
+				<div className="ka-folder-items">
+					<Browse routerParams={this.state.routerParams} />
 				</div>
 			</div>
 		);
@@ -87,4 +87,10 @@ const Main = React.createClass({
 
 });
 
-export default Main;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(Main);

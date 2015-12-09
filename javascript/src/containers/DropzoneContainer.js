@@ -1,7 +1,7 @@
 import React from 'react';
 import Reflux from 'reflux';
+import { connect } from 'react-redux';
 import Dropzone from '../views/Dropzone';
-import Config from '../stores/Config';
 import Actions from '../actions/Actions';
 import DragAndDropStore from '../stores/DragAndDropStore';
 import _t, {sf} from '../utils/lang';
@@ -45,10 +45,10 @@ const DropzoneContainer = React.createClass({
 		this.setState(getStoreState());
 	},
 
-    addFile (Dropzone, file) {
-    	Actions.beginUploading();
-    	
-    	let error;
+	addFile (Dropzone, file) {
+		Actions.beginUploading();
+
+		let error;
 		if (file.size > Dropzone.options.maxFilesize * 1024 * 1024) {
 			const filesize = Math.round(file.size / 1024 / 10.24) / 100;
 			const maxSize = Dropzone.options.maxFilesize;
@@ -63,98 +63,102 @@ const DropzoneContainer = React.createClass({
 		}
 
 		Actions.addFile(file, error);
-    },
-    
-    handleThumbnail (Dropzone, file, dataUrl) {
-        const f = this.getFileByID(file.uuid);
+	},
 
-        if(f) {
-        	Actions.alterItem(f.toJS(), {
-        		iconURL: dataUrl
-        	});       	
-    	}
-    },
+	handleThumbnail (Dropzone, file, dataUrl) {
+		const f = this.getFileByID(file.uuid);
 
-    handleProgress (Dropzone, file, percent, bytes) {
-        const f = this.getFileByID(file.uuid);
+		if(f) {
+			Actions.alterItem(f.toJS(), {
+				iconURL: dataUrl
+			});
+		}
+	},
 
-    	if(f) {
-    		Actions.alterItem(f.toJS(), {
-    			progress: percent
-    		});
-        }
-    },
+	handleProgress (Dropzone, file, percent, bytes) {
+		const f = this.getFileByID(file.uuid);
 
-    handleTotalProgress (Dropzone, percent, bytes) {    	
-    	Actions.setTotalProgress(percent, bytes);
-    },
+		if(f) {
+			Actions.alterItem(f.toJS(), {
+				progress: percent
+			});
+		}
+	},
 
-    handleUpload (Dropzone, files, response) {
-        files.forEach(file => {
-            let f = this.getFileByID(file.uuid);
-            if(f) {
-            	Dropzone.removeFile(f);
-            }        	
-        });
+	handleTotalProgress (Dropzone, percent, bytes) {
+		Actions.setTotalProgress(percent, bytes);
+	},
 
-        setTimeout(() => {
+	handleUpload (Dropzone, files, response) {
+		files.forEach(file => {
+			let f = this.getFileByID(file.uuid);
+			if(f) {
+				Dropzone.removeFile(f);
+			}
+		});
+
+		setTimeout(() => {
 			files.forEach((f, i) => {
 				Actions.replaceItem(
 					this.getFileByID(f.uuid).toJS(),
 					response[i]
-				);		
+				);
 			});
 
-    	}, 0);
-    },
-
-    handleQueueComplete () {
-    	Actions.endUploading();
-    },
-
-    // handleError (Dropzone, file, msg) {
-    // 	setTimeout(() => {
-    // 		Actions.removeFile(file);    		
-    // 	}, 0);
-    // 	Dropzone.removeFile(file);
-    // 	Actions.throwError(msg);
-    // },
-
-	getFileByID (uuid) {
-        return this.props.items.find(item => uuid === item.get('id'));
+		}, 0);
 	},
 
-    render () {
-    	let kls = 'ka-folder-items ka-dropzone ka-main';
-    	if(this.state.dragging) {
-    		kls += ' dragging';
-    	}
-    	return <Dropzone 
-		        	url={`${Config.get('baseRoute')}upload/${this.props.folderID}`}
-		            previewTemplate='<span></span>'
-		            acceptedFiles={Config.get('allowedExtensions')}
-		            maxFilesize={Config.get('maxFilesize')}
-		            uploadMultiple={true}
-		            onSuccessmultiple={this.handleUpload}
-		            onQueuecomplete={this.handleQueueComplete}
-		            onAddedfile={this.addFile}
-		            onThumbnail={this.handleThumbnail}
-		            onUploadprogress={this.handleProgress}
-		            onTotaluploadprogress={this.handleTotalProgress}
+	handleQueueComplete () {
+		Actions.endUploading();
+	},
 
+	// handleError (Dropzone, file, msg) {
+	// 	setTimeout(() => {
+	// 		Actions.removeFile(file);
+	// 	}, 0);
+	// 	Dropzone.removeFile(file);
+	// 	Actions.throwError(msg);
+	// },
+
+	getFileByID (uuid) {
+		return this.props.items.find(item => uuid === item.get('id'));
+	},
+
+	render () {
+		let kls = 'ka-folder-items ka-dropzone ka-main';
+		if(this.state.dragging) {
+			kls += ' dragging';
+		}
+		return <Dropzone 
+					url={`${this.props.config.baseRoute}upload/${this.props.folderID}`}
+					previewTemplate='<span></span>'
+					acceptedFiles={this.props.config.allowedExtensions}
+					maxFilesize={this.props.config.maxFilesize}
+					uploadMultiple={true}
+					onSuccessmultiple={this.handleUpload}
+					onQueuecomplete={this.handleQueueComplete}
+					onAddedfile={this.addFile}
+					onThumbnail={this.handleThumbnail}
+					onUploadprogress={this.handleProgress}
+					onTotaluploadprogress={this.handleTotalProgress}
 					parallelUploads={1}
-					clickable='#ka-add-files'					
+					clickable='#ka-add-files'
 					thumbnailWidth={198}
 					thumbnailHeight={132}
 					previewsContainer="#ka-previews"
 					disabled={this.state.dragging}
 					className={kls}>
-    					
-    					{this.props.children}
-    			
-    			</Dropzone>
-    }
+
+					{this.props.children}
+			</Dropzone>
+	}
 
 });
 
-export default DropzoneContainer;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(DropzoneContainer);

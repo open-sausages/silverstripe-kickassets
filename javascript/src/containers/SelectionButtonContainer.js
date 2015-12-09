@@ -1,9 +1,9 @@
 import React from 'react';
 import Reflux from 'reflux';
+import { connect } from 'react-redux';
 import {Button} from 'react-bootstrap';
 import SelectedItemsStore from '../stores/SelectedItemsStore';
 import Actions from '../actions/Actions';
-import Config from '../stores/Config';
 import {Glyphicon, Popover} from 'react-bootstrap';
 import cx from 'classnames';
 import sizeFormatter from '../utils/sizeFormatter';
@@ -35,11 +35,11 @@ const SelectionButtonContainer = React.createClass({
 
 	handleSelect (e) {
 		e.preventDefault();
-		
+
 		const items = this.state.selectedItems.toJS();
-		const max = Config.get('maxSelection');
-		const types = Config.get('allowedTypes');
-		const extensions = Config.get('allowedExtensions')
+		const max = this.props.config.maxSelection;
+		const types = this.props.config.allowedTypes;
+		const extensions = this.props.config.allowedExtensions
 								.split(',')
 								.map(ex => ex.replace(/^\./,''));
 
@@ -82,26 +82,32 @@ const SelectionButtonContainer = React.createClass({
 		const classes = cx({
 			'badged-button': true,
 			'btn': true,
-			'btn-success': true,			
+			'btn-success': true,
 		});
 		return (
 			<div>
 				<Button className={classes} onClick={this.handleSelect}>
 					{(!this.state.valid || count > 0) &&
-	        			<span className="badge badge-danger">{count}</span>
-	        		}
+						<span className="badge badge-danger">{count}</span>
+					}
 
 					{sf(_t('KickAssets.SELECTNUMBERITEMS','Done'), count)}
 					<Glyphicon glyph="chevron-right" />
 				</Button>
 				{this.state.error && 
-				    <Popover placement="left" positionLeft={50} positionTop={-10}>
-				    	{this.state.error}
-				    </Popover>
+					<Popover placement="left" positionLeft={50} positionTop={-10}>
+						{this.state.error}
+					</Popover>
 				}
-			</div>			
+			</div>
 		);
 	}
 });
 
-export default SelectionButtonContainer;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(SelectionButtonContainer);

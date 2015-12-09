@@ -3,22 +3,7 @@
  */
 
 import { combineReducers } from 'redux';
-
-/*
- * This would typically live inside the associated component's directory.
- * Multiple reducers can be imported here then combined below.
- */
-function exampleReducer(state = {}, action) {
-	switch (action.type) {
-		case 'foo':
-			return Object.assign({}, state, {
-				updated: true
-			});
-			break;
-		default:
-			return state;
-	}
-}
+import configReducer from './configReducer';
 
 /**
  * @func rootReducer
@@ -29,7 +14,7 @@ function exampleReducer(state = {}, action) {
  * @desc Operates on the Redux store to update application state.
  */
 const rootReducer = combineReducers({
-	exampleReducer
+	config: configReducer
 });
 
 export default rootReducer;

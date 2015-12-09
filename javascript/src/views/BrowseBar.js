@@ -1,8 +1,8 @@
 import React from 'react';
 import Reflux from 'reflux';
+import { connect } from 'react-redux';
 import BreadcrumbsContainer from '../containers/BreadcrumbsContainer';
 import FolderDataStore from '../stores/FolderDataStore';
-import Config from '../stores/Config';
 import BreadcrumbsStore from '../stores/BreadcrumbsStore';
 import UIStore from '../stores/UIStore';
 import FolderSearch from '../containers/FolderSearch';
@@ -20,11 +20,11 @@ const BrowseBar = React.createClass({
 		Reflux.ListenerMixin
 	],
 
-	getInitialState () {		
+	getInitialState () {
 		return {
 			showFolderSearch: false,
-			canUpload: FolderDataStore.get('data').get('canUpload') && Config.get('canUpload'),
-			canCreateFolder: FolderDataStore.get('data').get('canCreate') && Config.get('canCreateFolder'),
+			canUpload: FolderDataStore.get('data').get('canUpload') && this.props.config.canUpload,
+			canCreateFolder: FolderDataStore.get('data').get('canCreate') && this.props.config.canCreateFolder,
 			totalProgress: null,
 			hasBreadcrumbs: BreadcrumbsStore.get('data').count() > 0
 		}
@@ -36,7 +36,7 @@ const BrowseBar = React.createClass({
 		this.listenTo(UIStore, this.updateUI);
 	},
 
-	componentDidUpdate () {		
+	componentDidUpdate () {
 		if(this.state.totalProgress === 100) {
 			window.setTimeout(() => {
 				Actions.setTotalProgress(0);
@@ -46,8 +46,8 @@ const BrowseBar = React.createClass({
 
 	updateFolderData () {
 		this.setState({
-			canUpload: FolderDataStore.get('data').get('canUpload') && Config.get('canUpload'),
-			canCreateFolder: FolderDataStore.get('data').get('canCreate') && Config.get('canCreateFolder')
+			canUpload: FolderDataStore.get('data').get('canUpload') && this.props.config.canUpload,
+			canCreateFolder: FolderDataStore.get('data').get('canCreate') && this.props.config.canCreateFolder
 		});
 	},
 
@@ -70,7 +70,7 @@ const BrowseBar = React.createClass({
 			if(this.state.showFolderSearch) {
 				React.findDOMNode(this.refs.search).querySelector('input').focus();
 				document.addEventListener('click', this.cancelSearchClick);
-				document.addEventListener('keyup', this.cancelSearchEscape);				
+				document.addEventListener('keyup', this.cancelSearchEscape);
 			}
 			else {
 				document.removeEventListener('click', this.cancelSearchClick);
@@ -88,7 +88,7 @@ const BrowseBar = React.createClass({
 
 	cancelSearchClick (e) {
 		const node = React.findDOMNode(this.refs.search);
-		if(node && !nodeInRoot(e.target, node)) {			
+		if(node && !nodeInRoot(e.target, node)) {
 			this.toggleSearch();
 		}
 	},
@@ -97,19 +97,19 @@ const BrowseBar = React.createClass({
 		this.setState({
 			showFolderSearch: false
 		}, () => {
-			Navigation.goToFolder(item.id);		
+			Navigation.goToFolder(item.id);
 		});
 	},
 
 	handleNew (e) {
 		if(e === 'new-folder') {
 			Actions.insertFolder();
-		}		
+		}
 	},
 
 	render () {
-		const space = '\u00a0\u00a0';		
-		const plus = <Glyphicon glyph='plus' />;	
+		const space = '\u00a0\u00a0';
+		const plus = <Glyphicon glyph='plus' />;
 
 		return (
 			<div className="row top-bar browse-bar utility-bar">
@@ -162,4 +162,10 @@ const BrowseBar = React.createClass({
 	}
 });
 
-export default BrowseBar;
+function mapStateToProps(state) {
+	return {
+		config: state.config
+	}
+}
+
+export default connect(mapStateToProps)(BrowseBar);
