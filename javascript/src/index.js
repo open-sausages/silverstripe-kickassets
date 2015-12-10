@@ -18,6 +18,10 @@ const initialState = {
 	selectedItems: {
 		data: [],
 		multi: false
+	},
+	dragAndDrop: {
+		items: [],
+		isDragging: false
 	}
 };
 

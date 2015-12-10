@@ -3,6 +3,7 @@ import Reflux from 'reflux';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import * as selectedItemsActions from '../actions/selectedItemsActions';
+import * as dragAndDropActions from '../actions/dragAndDropActions';
 import Navigation from '../actions/Navigation';
 import Actions from '../actions/Actions';
 import Config from '../stores/Config';
@@ -45,7 +46,7 @@ const FolderItemContainer = React.createClass({
 			Navigation.goToFolder(this.props.data.get('id'));
 		}
 		else {
-			this.props.actions.clearSelection();
+			this.props.selectedItemsActions.clearSelection();
 			Navigation.goToEditItem(this.props.data.toJS());
 		}
 	},
@@ -62,7 +63,7 @@ const FolderItemContainer = React.createClass({
 
 		if(this._lastToggle && (now - this._lastToggle < 300)) return;
 
-		this.props.actions.toggleSelectionOnItem(this.props.data.get('id'));
+		this.props.selectedItemsActions.toggleSelectionOnItem(this.props.data.get('id'));
 		this._lastToggle = now;
 	},
 
@@ -110,7 +111,7 @@ const FolderItemContainer = React.createClass({
 				e.dataTransfer.setDragImage(this._ghost, 0, 0);
 			}
 
-			Actions.dragSelectedItems();
+			this.props.dragAndDropActions.dragSelectedItems(this.props.selectedItems.data);
 		}
 		else {
 			Actions.dragItem(this.props.data)
@@ -193,7 +194,7 @@ const FolderItemContainer = React.createClass({
 					onClick={this.handleClick}
 					onDoubleClick={this.handleDoubleClick}
 					onFilenameUpdated={this.handleFilenameUpdated}
-					onEditFilename={this.props.actions.clearSelection}
+					onEditFilename={this.props.selectedItemsActions.clearSelection}
 					onClearError={this.handleClearError}
 					onEdit={this.handleEdit}
 					onMove={this.handleMove}
@@ -216,7 +217,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
 	return {
-		actions: bindActionCreators(selectedItemsActions, dispatch)
+		selectedItemsActions: bindActionCreators(selectedItemsActions, dispatch),
+		dragAndDropActions: bindActionCreators(dragAndDropActions, dispatch)
 	}
 }
 

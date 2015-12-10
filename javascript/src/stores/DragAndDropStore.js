@@ -15,13 +15,6 @@ export default Reflux.createStore({
 
 	mixins: [ImmutableStoreMixin(_state)],
 
-	onDragSelectedItems () {		
-		_state.data = SelectedItemsStore.get('data');
-		_state.active = true;
-
-		this.trigger();
-	},
-
 	onDragItem (item) {
 		_state.data = Immutable.List().push(item);
 		_state.active = true;
