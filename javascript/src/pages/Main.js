@@ -9,7 +9,6 @@ import Browse from './Browse';
 import Actions from '../actions/Actions';
 import Navigation from '../actions/Navigation';
 import Immutable from 'immutable';
-import SelectedItemsStore from '../stores/SelectedItemsStore';
 
 const Main = React.createClass({
 

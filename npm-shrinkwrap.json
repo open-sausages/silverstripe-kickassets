@@ -802,6 +802,11 @@
       "from": "https://registry.npmjs.org/classnames/-/classnames-2.2.1.tgz",
       "resolved": "https://registry.npmjs.org/classnames/-/classnames-2.2.1.tgz"
     },
+    "clone": {
+      "version": "1.0.2",
+      "from": "clone@*",
+      "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+    },
     "css-loader": {
       "version": "0.9.1",
       "from": "https://registry.npmjs.org/css-loader/-/css-loader-0.9.1.tgz",

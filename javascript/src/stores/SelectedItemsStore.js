@@ -16,32 +16,6 @@ const SelectedItemsStore = Reflux.createStore({
 
 	mixins: [ImmutableStoreMixin(_state)],
 
-	onToggleSelection (id) {
-		const index = this.indexForID(id);
-		const found = (index > -1);
-		const folderItem = FolderItemsStore.getByID(id);
-		let newData;
-
-		if(!folderItem) {			
-			return;			
-		}
-
-		if(_state.multi && found) {		
-			newData = _state.data.delete(index);			
-		}
-		else if(_state.multi && !found) {			
-			newData = _state.data.push(folderItem);			
-		}
-		else {			
-			newData = _state.data.clear().push(folderItem);	
-		}
-
-		if(newData && newData !== _state.data) {
-			_state.data = newData;	
-			this.trigger();
-		}
-	},
-
 	onGroupSelect (ids) {
 		if(!_state.multi) {
 			_state.data = _state.data.clear();

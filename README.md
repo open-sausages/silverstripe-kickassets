@@ -129,6 +129,8 @@ If you would prefer not to install webpack globally, there are these handy npm s
 - `npm run build:watch` - Equivalent to `webpack -watch`
 - `npm run build:prod` - Equivalent to `PROD=1 webpack -p`
 
+Don't forget to run the tests, they live in the `tests/react` directory, and all you need to do is run `npm run test`.
+
 ## Troubleshooting
 
 Ring Uncle Cheese.

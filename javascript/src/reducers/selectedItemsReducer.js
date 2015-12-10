@@ -3,6 +3,7 @@
  */
 
 import { SELECTED_ITEMS } from '../constants/actionTypes';
+import clone from 'clone';
 
 const initialState = {
 	data: [],
@@ -26,6 +27,36 @@ export default function selectedItemsReducer(state = initialState, action) {
 		case SELECTED_ITEMS.DEACTIVATE_MULTISELECT:
 			return Object.assign({}, state, {
 				multi: false
+			});
+		case SELECTED_ITEMS.TOGGLE_SELECTED:
+			var selectedItemsList = clone(state.data), // Make a clone so we don't mutate the current state.
+				item = selectedItemsList.find((item) => {
+					return item.id === action.payload.id;
+				});
+
+			// The user has deselected an item while in multi-select mode.
+			if (typeof item !== 'undefined' && state.multi === true) {
+				// Remove the item from the selected items list.
+				selectedItemsList.splice(selectedItemsList.indexOf(item), 1);
+			}
+			// The user has selected an item while in multi-select mode.
+			else if (typeof item === 'undefined' && state.multi === true) {
+				// Add the item to the selected items list.
+				selectedItemsList.push({ id: action.payload.id });
+			}
+			// The user has deselected an item while in single-select mode.
+			else if (typeof item !== 'undefined' && state.multi === false) {
+				// Clear the list, nothing is selected.
+				selectedItemsList = [];
+			}
+			// The user has selected an item while in single-select mode.
+			else if (typeof item === 'undefined' && state.multi === false) {
+				// The list should only have the newly selected item in it.
+				selectedItemsList = [{ id: action.payload.id }];
+			}
+
+			return Object.assign({}, state, {
+				data: selectedItemsList
 			});
 		default:
 			return state;

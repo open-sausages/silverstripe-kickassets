@@ -1,5 +1,8 @@
 import React from 'react';
 import Reflux from 'reflux';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as selectedItemsActions from '../actions/selectedItemsActions';
 import Navigation from '../actions/Navigation';
 import Actions from '../actions/Actions';
 import Config from '../stores/Config';
@@ -35,11 +38,11 @@ const FolderItemContainer = React.createClass({
 			document.selection.empty();
 		} 
 		else if(window.getSelection) {
-			window.getSelection().removeAllRanges();			
+			window.getSelection().removeAllRanges();
 		}
-				
+
 		if(this.props.data.get('type') === 'folder') {
-			Navigation.goToFolder(this.props.data.get('id'));	
+			Navigation.goToFolder(this.props.data.get('id'));
 		}
 		else {
 			Actions.clearSelection();
@@ -51,16 +54,16 @@ const FolderItemContainer = React.createClass({
 		e.preventDefault();
 
 		let node = e.target;
-		while (node && node !== React.findDOMNode(this)) {	
+		while (node && node !== React.findDOMNode(this)) {
 			if (node.classList.contains('file-action')) return;
 			node = node.parentNode;
 		}
 		const now = +new Date();
-		
+
 		if(this._lastToggle && (now - this._lastToggle < 300)) return;
 
-		Actions.toggleSelection(this.props.data.get('id'));
-		this._lastToggle = now;		
+		this.props.actions.toggleSelectionOnItem(this.props.data.get('id'));
+		this._lastToggle = now;
 	},
 
 	handleFilenameUpdated (title) {
@@ -79,7 +82,7 @@ const FolderItemContainer = React.createClass({
 		Navigation.goToEditItem(this.props.data.toJS());
 	},
 
-	handleMove (data) {		
+	handleMove (data) {
 		Navigation.goToMoveItems(
 			FolderItemsStore.get('folderID'),
 			this.state.selected ? SelectedItemsStore.get('data').toJS() : [data]
@@ -101,10 +104,10 @@ const FolderItemContainer = React.createClass({
 		const count = SelectedItemsStore.get('data').count();
 		e.dataTransfer.effectAllowed = 'move';
 		e.dataTransfer.setData('text', 'drag');
-		if(this.props.selected) {			
+		if(this.props.selected) {
 			if(count > 1 && ('setDragImage' in e.dataTransfer)) {
 				this.createGhost(count);
-				e.dataTransfer.setDragImage(this._ghost, 0, 0);				
+				e.dataTransfer.setDragImage(this._ghost, 0, 0);
 			}
 
 			Actions.dragSelectedItems();
@@ -120,8 +123,8 @@ const FolderItemContainer = React.createClass({
 		if(this.props.data.get('type') !== 'folder') return;
 
 		if(DragAndDropStore.get('data').contains(this.props.data)) {
-			return;			
-		}	
+			return;
+		}
 		this.setState({
 			isDropTarget: true
 		});
@@ -140,7 +143,7 @@ const FolderItemContainer = React.createClass({
 	handleDrop (e) {
 		e.preventDefault();
 		if(!this.state.isDropTarget) return;
-		
+
 		Actions.moveItems(
 			this.props.data.get('filename'),
 			DragAndDropStore.get('data').map(item => item.get('id')).toJS()
@@ -205,4 +208,16 @@ const FolderItemContainer = React.createClass({
 	}
 });
 
-export default FolderItemContainer;
+function mapStateToProps(state) {
+	return {
+		selectedItems: state.selectedItems
+	}
+}
+
+function mapDispatchToProps(dispatch) {
+	return {
+		actions: bindActionCreators(selectedItemsActions, dispatch)
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(FolderItemContainer);

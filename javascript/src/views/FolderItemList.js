@@ -1,5 +1,6 @@
 import React from 'react/addons';
 import Reflux from 'reflux';
+import { connect } from 'react-redux';
 import Actions from '../actions/Actions';
 import FolderItemContainer from '../containers/FolderItemContainer';
 import ListViewHeaderContainer from '../containers/ListViewHeaderContainer';
@@ -9,7 +10,6 @@ import scrollToElement from '../utils/scrollToElement';
 import isElementInView from '../utils/isElementInView';
 import Immutable from 'immutable';
 import DragAndDropStore from '../stores/DragAndDropStore';
-import SelectedItemsStore from '../stores/SelectedItemsStore';
 import FolderItemsStore from '../stores/FolderItemsStore';
 import SelectableGroup from '../views/SelectableGroup';
 import Loader from './Loader';
@@ -17,10 +17,9 @@ import {Button} from 'react-bootstrap';
 import _t from '../utils/lang';
 
 const getStoreState = () => {
-	return {		
+	return {
 		unsavedItems: FolderItemsStore.get('unsavedItems'),
-		loading: FolderItemsStore.get('loading'),
-		selectedItems: SelectedItemsStore.get('data')
+		loading: FolderItemsStore.get('loading')
 	}
 };
 
@@ -30,7 +29,7 @@ const FolderItemList = React.createClass({
 		items: React.PropTypes.object,
 		routerParams: React.PropTypes.object.isRequired,
 		hasMore: React.PropTypes.bool,
-		cursor: React.PropTypes.number		
+		cursor: React.PropTypes.number
 	},
 
 	mixins: [
@@ -49,11 +48,10 @@ const FolderItemList = React.createClass({
 
 	componentDidMount() {
 		this.listenTo(FolderItemsStore, this.updateStoreState);
-		this.listenTo(SelectedItemsStore, this.updateStoreState);
 
 		this.scrollToEdited();
 		document.addEventListener('mousedown', this.mouseDownListener);
-		document.addEventListener('click', this.clickListener);		
+		document.addEventListener('click', this.clickListener);
 	},
 
 	componentWillUnmount () {
@@ -70,7 +68,7 @@ const FolderItemList = React.createClass({
 		else if(this.getFileFromProps() && !this.getFileFromProps(prevProps)) {
 			this.scrollToEdited();
 		}
-		else if(!prevState.unsavedItems && this.state.unsavedItems) {			
+		else if(!prevState.unsavedItems && this.state.unsavedItems) {
 			this.scrollToTop();
 		}
 	},
@@ -84,9 +82,9 @@ const FolderItemList = React.createClass({
 		if(fileID) {
 			const id = `#item_${fileID}`;
 			const result = isElementInView(id, this.getScroller());
-			const pad = this.props.routerParams.get('view') === 'list' ? 210 : 110;			
+			const pad = this.props.routerParams.get('view') === 'list' ? 210 : 110;
 			if(result === false) {
-				scrollToElement(id, this.getScroller(), 100, pad);				
+				scrollToElement(id, this.getScroller(), 100, pad);
 			}
 		}
 	},
@@ -97,7 +95,7 @@ const FolderItemList = React.createClass({
 		if(!file) return;
 
 		const fileID = file.toJS().id;
-		const pad = this.props.routerParams.get('view') === 'list' ? 210 : 110;			
+		const pad = this.props.routerParams.get('view') === 'list' ? 210 : 110;
 
 		scrollToElement(
 			`#item_${fileID}`, 
@@ -108,7 +106,7 @@ const FolderItemList = React.createClass({
 	},
 
 
-	mouseDownListener (e) {		
+	mouseDownListener (e) {
 		this._mouseData = {
 			x: e.pageX,
 			y: e.pageY
@@ -139,7 +137,7 @@ const FolderItemList = React.createClass({
 		}
 
 		if(scroller && !file) {
-			Actions.clearSelection();		
+			Actions.clearSelection();
 		}
 
 	},
@@ -171,12 +169,24 @@ const FolderItemList = React.createClass({
 		);
 	},
 
-	resolveItemToDOM (key) {		
+	resolveItemToDOM (key) {
 		return document.getElementById(`item_${key}`);
 	},
 
 	handleSelction (keys) {
 		Actions.groupSelect(keys);
+	},
+
+	/**
+	 * @func itemIsSelected
+	 * @param number id
+	 * @return boolean
+	 * @desc Checks if the item with the passed id is selected.
+	 */
+	itemIsSelected(id) {
+		return this.props.selectedItems.data.find((item) => {
+			return item.id === id;
+		});
 	},
 
 	render() {
@@ -185,7 +195,7 @@ const FolderItemList = React.createClass({
 		}
 
 		const recent = this.props.routerParams.get('recent');
-		const view = this.props.routerParams.get('view');		
+		const view = this.props.routerParams.get('view');
 		const fileID = this.getFileFromProps();
 		const children = [];
 
@@ -203,20 +213,20 @@ const FolderItemList = React.createClass({
 				props.visibleIndexes.push(index);
 			}
 
-			children.push(	
+			children.push(
 				<FolderItemContainer
 					ref={`item_${item.get('id')}`}
 					key={item.get('id')}
 					id={`item_${item.get('id')}`}
 					data={item}
 					layout={view}
-					selected={this.state.selectedItems.contains(item)}
-					selectedCount={this.state.selectedItems.count()}
-					editing={(item.get('id') == fileID)} />			
+					selected={this.itemIsSelected(item.get('id'))}
+					selectedCount={this.props.selectedItems.data.length}
+					editing={(item.get('id') == fileID)} />
 			);
 
 		});
-		
+
 		if(this.props.hasMore) {
 			children.push(
 				<Button key='loadmore' bsStyle='primary' onClick={this.loadMore} className='load-more'>
@@ -224,13 +234,13 @@ const FolderItemList = React.createClass({
 				</Button>
 			);
 		}
-		
+
 		return (
 			<div>
 				{view === 'list' &&
 					<ListViewHeaderContainer routerParams={this.props.routerParams} />
 				}
-				<FullHeightScroller ref="scroller" onScroll={this.handleScroll} className={`ka-selectzone ${view}`}>			
+				<FullHeightScroller ref="scroller" onScroll={this.handleScroll} className={`ka-selectzone ${view}`}>
 					<SelectableGroup style={{height:'100%'}} onSelection={this.handleSelction} items={children} itemResolver={this.resolveItemToDOM}>
 						<LazyLoadList {...props}>
 							{children}
@@ -244,4 +254,10 @@ const FolderItemList = React.createClass({
 
 });
 
-export default FolderItemList;
+function mapStateToProps(state) {
+	return {
+		selectedItems: state.selectedItems
+	}
+}
+
+export default connect(mapStateToProps)(FolderItemList);
