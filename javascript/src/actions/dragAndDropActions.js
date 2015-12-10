@@ -4,6 +4,7 @@
 
 import { DRAG_AND_DROP } from '../constants/actionTypes';
 import clone from 'clone';
+import immutable from 'immutable';
 
 /**
  * @func dragSelectedItems
@@ -27,15 +28,19 @@ export function dragSelectedItems(selectedItems) {
 }
 
 /**
- * @func activateMultiSelect
+ * @func dragItem
+ * @param object item - item being dragged.
  * @return function
  *
- * @desc Activates multiselect.
+ * @desc Saving the currently dragging item into the dragAndDrop state and setting the isDragging flag.
  */
-// export function activateMultiSelect() {
-// 	return (dispatch, getState) => {
-// 		return dispatch({
-// 			type: SELECTED_ITEMS.ACTIVATE_MULTISELECT
-// 		});
-// 	};
-// }
+export function dragItem(item) {
+    return (dispatch, getState) => {
+        return dispatch({
+            type: DRAG_AND_DROP.DRAG_ITEM,
+            payload: {
+                items: Immutable.List().push(item)
+            }
+        });
+    }
+}
