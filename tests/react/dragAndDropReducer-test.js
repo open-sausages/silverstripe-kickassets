@@ -38,4 +38,35 @@ describe('dragAndDropReducer', () => {
             expect(result.items.length).toBe(2);
 		});
 	});
+	
+	describe('DRAG_ITEM', () => {
+        var result;
+        
+        beforeEach(() => {
+			const state = {
+				items: [],
+                isDragging: false
+			};
+            
+            result = dragAndDropReducer(
+                state, 
+                {
+                    type: 'DRAG_ITEM',
+                    payload: {
+                        items: [{
+                            id: 1
+                        }]
+                    }
+                }
+            );
+        });
+        
+        it('should set the isDragging flag to true', () => {
+            expect(result.isDragging).toBe(true);    
+		});
+        
+        it('should add the currently dragging item to state', () => {            
+            expect(result.items.length).toBe(1);
+		});
+	});
 });
