@@ -156,7 +156,7 @@ const FolderItemContainer = React.createClass({
 
 	handleDragEnd (e) {
 		this.removeGhost();
-		Actions.endDragging();
+		this.props.dragAndDropActions.endDragging();
 	},
 
 	createGhost (count) {

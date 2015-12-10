@@ -69,4 +69,36 @@ describe('dragAndDropReducer', () => {
             expect(result.items.length).toBe(1);
 		});
 	});
+	
+	describe('END_DRAGGING', () => {
+        var result;
+        
+        beforeEach(() => {
+			const state = {
+				items: [{
+					id: 1
+				}],
+                isDragging: true
+			};
+            
+            result = dragAndDropReducer(
+                state, 
+                {
+                    type: 'END_DRAGGING',
+                    payload: {
+                        items: []
+                    }
+                }
+            );
+        });
+        
+        it('should set the isDragging flag to true', () => {
+            expect(result.isDragging).toBe(false);    
+		});
+        
+        it('should add the currently dragging item to state', () => {
+			console.log(result.items);          
+            expect(result.items.length).toBe(0);
+		});
+	});
 });

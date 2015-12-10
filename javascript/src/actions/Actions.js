@@ -28,8 +28,7 @@ const Actions = Reflux.createActions({
 	'setTotalProgress': {},
 	'removeMoveItem': {},
 	'refreshFolderItems': {},
-	'clearFileError': {},
-	'endDragging': {}
+	'clearFileError': {}
 
 });
 

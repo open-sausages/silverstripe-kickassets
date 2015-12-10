@@ -21,12 +21,5 @@ export default Reflux.createStore({
 		
 		this.trigger();
 	},
-
-	onEndDragging () {
-		_state.data = Immutable.List();
-		_state.active = false;
-
-		this.trigger();
-	}
 	
 });

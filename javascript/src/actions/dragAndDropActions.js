@@ -4,7 +4,7 @@
 
 import { DRAG_AND_DROP } from '../constants/actionTypes';
 import clone from 'clone';
-import immutable from 'immutable';
+import Immutable from 'immutable';
 
 /**
  * @func dragSelectedItems
@@ -39,7 +39,24 @@ export function dragItem(item) {
         return dispatch({
             type: DRAG_AND_DROP.DRAG_ITEM,
             payload: {
-                items: Immutable.List().push(item)
+                items: [item]
+            }
+        });
+    }
+}
+
+/**
+ * @func endDragging
+ * @return function
+ *
+ * @desc Emptying the dragAndDrop state and removing the isDragging flag.
+ */
+export function endDragging() {
+    return (dispatch, getState) => {
+        return dispatch({
+            type: DRAG_AND_DROP.END_DRAGGING,
+            payload: {
+                items: []
             }
         });
     }

@@ -4,6 +4,7 @@
 
 import { DRAG_AND_DROP } from '../constants/actionTypes';
 import clone from 'clone';
+import Immutable from 'immutable';
 
 const initialState = {
 	items: [],
@@ -30,6 +31,11 @@ export default function dragAndDropReducer(state = initialState, action) {
 			return Object.assign({}, state, {
 				items: action.payload.items,
 				isDragging: true
+			});
+		case DRAG_AND_DROP.END_DRAGGING:
+			return Object.assign({}, state, {
+				items: action.payload.items,
+				isDragging: false
 			});
 		default:
 			return state;
