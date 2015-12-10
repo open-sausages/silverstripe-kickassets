@@ -52,6 +52,7 @@
     "testDirectoryName": "tests/react",
     "unmockedModulePathPatterns": [
       "<rootDir>/node_modules/react",
+      "<rootDir>/node_modules/react-redux",
       "<rootDir>/node_modules/clone"
     ],
     "bail": true

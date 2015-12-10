@@ -2,7 +2,6 @@ import React from 'react';
 import Reflux from 'reflux';
 import { connect } from 'react-redux';
 import {Button} from 'react-bootstrap';
-import SelectedItemsStore from '../stores/SelectedItemsStore';
 import Actions from '../actions/Actions';
 import {Glyphicon, Popover} from 'react-bootstrap';
 import cx from 'classnames';
@@ -11,8 +10,6 @@ import _t, {sf} from '../utils/lang';
 
 const getStoreData = () => {
 	return {
-		selectedItems: SelectedItemsStore.get('data'),
-		valid: SelectedItemsStore.isValid(),
 		error: null
 	}
 };
@@ -25,10 +22,6 @@ const SelectionButtonContainer = React.createClass({
 		return getStoreData();
 	},
 
-	componentDidMount () {
-		this.listenTo(SelectedItemsStore, this.updateSelection);
-	},
-
 	updateSelection () {
 		this.setState(getStoreData());
 	},
@@ -36,49 +29,125 @@ const SelectionButtonContainer = React.createClass({
 	handleSelect (e) {
 		e.preventDefault();
 
-		const items = this.state.selectedItems.toJS();
-		const max = this.props.config.maxSelection;
-		const types = this.props.config.allowedTypes;
-		const extensions = this.props.config.allowedExtensions
-								.split(',')
-								.map(ex => ex.replace(/^\./,''));
+		var error = '';
 
-		let error;
-
-		if(!SelectedItemsStore.isValidCount()) {
+		if (!this.validCount()) {
 			error = sf(_t(
 				'KickAssets.TOOMANYSELECTED',
 				'You have selected too many items. Please select no more than %s.'
-			), max);
+			), this.props.config.maxSelection);
 		}
 
-		else if(!SelectedItemsStore.isValidTypes()) {
+		else if (!this.validTypes()) {
 			error = sf(_t(
 				'KickAssets.INVALIDTYPESSELECTED',
 				'You have selected some invalid items. Please select only %s'
-			), types.join(', '));
+			), this.props.config.allowedTypes.join(', '));
 		}
 
-		else if(!SelectedItemsStore.isValidExtensions()) {
+		else if (!this.validExtensions()) {
 			error = sf(_t(
 				'KickAssets.INVALIDEXTENSIONSSELECTED',
 				'You have selected some files with invalid extensions. Please select only %s'
-			), extensions.join(', '));
+			), this.allowedExtensionsToArray().join(', '));
 		}
 
-		if(error) {
+		if (error !== '') {
 			this.setState({error});
 		}
 
 		else {
 			window.parent.KickAssets.finish(
-				items
+				this.props.selectedItems.data
 			);
 		}
 	},
 
+	/**
+	 * @func allowedExtensionsToArray
+	 * @return array
+	 *
+	 * @desc Returns an array of allowed extensions based on config.
+	 */
+	allowedExtensionsToArray() {
+		return this.props.config.allowedExtensions
+			.split(',')
+			.map(ex => ex.replace(/^\./, ''));
+	},
+
+	/**
+	 * @func validExtensions
+	 * @return boolean
+	 *
+	 * @desc Checks every item in the selection has an allowed extension.
+	 */
+	validExtensions() {
+		const allowedExtensions = allowedExtensionsToArray();
+
+		// If there are no allowed extensions, assume everything is allowed.
+		if (allowedExtensions.length === 0) {
+			return true;
+		}
+
+		// Will return false if any item doesn't meet the condition.
+		return this.props.selectedItems.data.every((item) => {
+			return allowedExtensions.indexOf(item.extension > -1);
+		});
+	},
+
+	/**
+	 * @func validTypes
+	 * @return boolean
+	 *
+	 * @desc Checks every item in the selection is an allowed type.
+	 */
+	validTypes() {
+		const allowedTypes = this.props.config.allowedTypes;
+
+		if (allowedTypes.length === 0) {
+			return true;
+		}
+
+		// Will return false if any item doesn't meet the condition.
+		return this.props.selectedItems.data.every((item) => {
+			return allowedTypes.indexOf(item.type > -1);
+		});
+	},
+
+	/**
+	 * @func validCount
+	 * @return boolean
+	 *
+	 * @desc Checks the number of currently selected items does not exceed the maximum allowed by config.
+	 */
+	validCount() {
+		var validCount = true;
+		const maxSelection = this.props.config.maxSelection; // 0 means unlimited.
+		const selectedItemsCount = this.props.selectedItems.data.length;
+
+		if (maxSelection > 0 && maxSelection < selectedItemsCount) {
+			validCount = false;
+		}
+
+		return validCount;
+	},
+
+	/**
+	 * @func valid
+	 * @return boolean
+	 *
+	 * @desc Check the current selection is valid based config, count, type, and extension.
+	 */
+	valid() {
+		return this.props.config.allowSelection === true && 
+			this.isValidCount() && 
+			this.isValidTypes() && 
+			this.isValidExtensions();
+	},
+
 	render () {
-		const count = this.state.valid ? this.state.selectedItems.count() : "!";
+		const isValidSelection = this.valid();
+		const count = isValidSelection ? this.props.selectedItems.length : "!";
 		const classes = cx({
 			'badged-button': true,
 			'btn': true,
@@ -87,7 +156,7 @@ const SelectionButtonContainer = React.createClass({
 		return (
 			<div>
 				<Button className={classes} onClick={this.handleSelect}>
-					{(!this.state.valid || count > 0) &&
+					{(!isValidSelection || count > 0) &&
 						<span className="badge badge-danger">{count}</span>
 					}
 
@@ -106,7 +175,8 @@ const SelectionButtonContainer = React.createClass({
 
 function mapStateToProps(state) {
 	return {
-		config: state.config
+		config: state.config,
+		selectedItems: state.selectedItems
 	}
 }
 

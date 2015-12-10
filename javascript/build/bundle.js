@@ -70,7 +70,7 @@
 
 	var _pagesMain2 = _interopRequireDefault(_pagesMain);
 
-	var _pagesBrowse = __webpack_require__(376);
+	var _pagesBrowse = __webpack_require__(375);
 
 	var _pagesBrowse2 = _interopRequireDefault(_pagesBrowse);
 
@@ -27466,11 +27466,11 @@
 
 	var _viewsTopBar2 = _interopRequireDefault(_viewsTopBar);
 
-	var _viewsBrowseBar = __webpack_require__(364);
+	var _viewsBrowseBar = __webpack_require__(363);
 
 	var _viewsBrowseBar2 = _interopRequireDefault(_viewsBrowseBar);
 
-	var _Browse = __webpack_require__(376);
+	var _Browse = __webpack_require__(375);
 
 	var _Browse2 = _interopRequireDefault(_Browse);
 
@@ -58517,19 +58517,15 @@
 
 	var _reactBootstrap = __webpack_require__(275);
 
-	var _storesSelectedItemsStore = __webpack_require__(361);
-
-	var _storesSelectedItemsStore2 = _interopRequireDefault(_storesSelectedItemsStore);
-
 	var _actionsActions = __webpack_require__(340);
 
 	var _actionsActions2 = _interopRequireDefault(_actionsActions);
 
-	var _classnames = __webpack_require__(362);
+	var _classnames = __webpack_require__(361);
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
-	var _utilsSizeFormatter = __webpack_require__(363);
+	var _utilsSizeFormatter = __webpack_require__(362);
 
 	var _utilsSizeFormatter2 = _interopRequireDefault(_utilsSizeFormatter);
 
@@ -58539,8 +58535,6 @@
 
 	var getStoreData = function getStoreData() {
 		return {
-			selectedItems: _storesSelectedItemsStore2['default'].get('data'),
-			valid: _storesSelectedItemsStore2['default'].isValid(),
 			error: null
 		};
 	};
@@ -58554,10 +58548,6 @@
 			return getStoreData();
 		},
 
-		componentDidMount: function componentDidMount() {
-			this.listenTo(_storesSelectedItemsStore2['default'], this.updateSelection);
-		},
-
 		updateSelection: function updateSelection() {
 			this.setState(getStoreData());
 		},
@@ -58565,32 +58555,105 @@
 		handleSelect: function handleSelect(e) {
 			e.preventDefault();
 
-			var items = this.state.selectedItems.toJS();
-			var max = this.props.config.maxSelection;
-			var types = this.props.config.allowedTypes;
-			var extensions = this.props.config.allowedExtensions.split(',').map(function (ex) {
-				return ex.replace(/^\./, '');
-			});
+			var error = '';
 
-			var error = undefined;
-
-			if (!_storesSelectedItemsStore2['default'].isValidCount()) {
-				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.TOOMANYSELECTED', 'You have selected too many items. Please select no more than %s.'), max);
-			} else if (!_storesSelectedItemsStore2['default'].isValidTypes()) {
-				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.INVALIDTYPESSELECTED', 'You have selected some invalid items. Please select only %s'), types.join(', '));
-			} else if (!_storesSelectedItemsStore2['default'].isValidExtensions()) {
-				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.INVALIDEXTENSIONSSELECTED', 'You have selected some files with invalid extensions. Please select only %s'), extensions.join(', '));
+			if (!this.validCount()) {
+				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.TOOMANYSELECTED', 'You have selected too many items. Please select no more than %s.'), this.props.config.maxSelection);
+			} else if (!this.validTypes()) {
+				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.INVALIDTYPESSELECTED', 'You have selected some invalid items. Please select only %s'), this.props.config.allowedTypes.join(', '));
+			} else if (!this.validExtensions()) {
+				error = (0, _utilsLang.sf)((0, _utilsLang2['default'])('KickAssets.INVALIDEXTENSIONSSELECTED', 'You have selected some files with invalid extensions. Please select only %s'), this.allowedExtensionsToArray().join(', '));
 			}
 
-			if (error) {
+			if (error !== '') {
 				this.setState({ error: error });
 			} else {
-				window.parent.KickAssets.finish(items);
+				window.parent.KickAssets.finish(this.props.selectedItems.data);
 			}
 		},
 
+		/**
+	  * @func allowedExtensionsToArray
+	  * @return array
+	  *
+	  * @desc Returns an array of allowed extensions based on config.
+	  */
+		allowedExtensionsToArray: function allowedExtensionsToArray() {
+			return this.props.config.allowedExtensions.split(',').map(function (ex) {
+				return ex.replace(/^\./, '');
+			});
+		},
+
+		/**
+	  * @func validExtensions
+	  * @return boolean
+	  *
+	  * @desc Checks every item in the selection has an allowed extension.
+	  */
+		validExtensions: function validExtensions() {
+			var allowedExtensions = allowedExtensionsToArray();
+
+			// If there are no allowed extensions, assume everything is allowed.
+			if (allowedExtensions.length === 0) {
+				return true;
+			}
+
+			// Will return false if any item doesn't meet the condition.
+			return this.props.selectedItems.data.every(function (item) {
+				return allowedExtensions.indexOf(item.extension > -1);
+			});
+		},
+
+		/**
+	  * @func validTypes
+	  * @return boolean
+	  *
+	  * @desc Checks every item in the selection is an allowed type.
+	  */
+		validTypes: function validTypes() {
+			var allowedTypes = this.props.config.allowedTypes;
+
+			if (allowedTypes.length === 0) {
+				return true;
+			}
+
+			// Will return false if any item doesn't meet the condition.
+			return this.props.selectedItems.data.every(function (item) {
+				return allowedTypes.indexOf(item.type > -1);
+			});
+		},
+
+		/**
+	  * @func validCount
+	  * @return boolean
+	  *
+	  * @desc Checks the number of currently selected items does not exceed the maximum allowed by config.
+	  */
+		validCount: function validCount() {
+			var validCount = true;
+			var maxSelection = this.props.config.maxSelection; // 0 means unlimited.
+			var selectedItemsCount = this.props.selectedItems.data.length;
+
+			if (maxSelection > 0 && maxSelection < selectedItemsCount) {
+				validCount = false;
+			}
+
+			return validCount;
+		},
+
+		/**
+	  * @func valid
+	  * @return boolean
+	  *
+	  * @desc Check the current selection is valid based config, count, type, and extension.
+	  */
+		valid: function valid() {
+			return this.props.config.allowSelection === true && this.isValidCount() && this.isValidTypes() && this.isValidExtensions();
+		},
+
 		render: function render() {
-			var count = this.state.valid ? this.state.selectedItems.count() : "!";
+			var isValidSelection = this.valid();
+			var count = isValidSelection ? this.props.selectedItems.length : "!";
 			var classes = (0, _classnames2['default'])({
 				'badged-button': true,
 				'btn': true,
@@ -58602,7 +58665,7 @@
 				_react2['default'].createElement(
 					_reactBootstrap.Button,
 					{ className: classes, onClick: this.handleSelect },
-					(!this.state.valid || count > 0) && _react2['default'].createElement(
+					(!isValidSelection || count > 0) && _react2['default'].createElement(
 						'span',
 						{ className: 'badge badge-danger' },
 						count
@@ -58621,7 +58684,8 @@
 
 	function mapStateToProps(state) {
 		return {
-			config: state.config
+			config: state.config,
+			selectedItems: state.selectedItems
 		};
 	}
 
@@ -58630,114 +58694,6 @@
 
 /***/ },
 /* 361 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _reflux = __webpack_require__(253);
-
-	var _reflux2 = _interopRequireDefault(_reflux);
-
-	var _immutable = __webpack_require__(354);
-
-	var _immutable2 = _interopRequireDefault(_immutable);
-
-	var _mixinsImmutableStoreMixin = __webpack_require__(355);
-
-	var _mixinsImmutableStoreMixin2 = _interopRequireDefault(_mixinsImmutableStoreMixin);
-
-	var _FolderItemsStore = __webpack_require__(339);
-
-	var _FolderItemsStore2 = _interopRequireDefault(_FolderItemsStore);
-
-	var _actionsActions = __webpack_require__(340);
-
-	var _actionsActions2 = _interopRequireDefault(_actionsActions);
-
-	var _Config = __webpack_require__(345);
-
-	var _Config2 = _interopRequireDefault(_Config);
-
-	var _state = {
-		data: _immutable2['default'].List(),
-		multi: false
-	};
-
-	var SelectedItemsStore = _reflux2['default'].createStore({
-
-		listenables: [_actionsActions2['default']],
-
-		mixins: [(0, _mixinsImmutableStoreMixin2['default'])(_state)],
-
-		isMulti: function isMulti() {
-			return _state.multi;
-		},
-
-		onDeleteSelected: function onDeleteSelected() {
-			_state.data = _state.data.clear();
-
-			this.trigger();
-		},
-
-		onMoveSelected: function onMoveSelected() {
-			_state.data = _state.data.clear();
-
-			this.trigger();
-		},
-
-		onDropItems: function onDropItems(items, target) {
-			_state.data = _state.data.filter(function (item) {
-				return items.indexOf(item.get('id')) === -1;
-			});
-
-			this.trigger();
-		},
-
-		isValidCount: function isValidCount() {
-			if (!!_Config2['default'].get('maxSelection')) {
-				return _Config2['default'].get('maxSelection') >= _state.data.count();
-			}
-
-			return true;
-		},
-
-		isValidTypes: function isValidTypes() {
-			var types = _Config2['default'].get('allowedTypes');
-			if (!types) return true;
-
-			return _state.data.every(function (item) {
-				return types.indexOf(item.get('type')) > -1;
-			});
-		},
-
-		isValidExtensions: function isValidExtensions() {
-			var exts = _Config2['default'].get('allowedExtensions').split(',').map(function (ex) {
-				return ex.replace(/^\./, '');
-			});
-
-			if (!exts.length) return true;
-
-			return _state.data.every(function (item) {
-				return exts.indexOf(item.get('extension')) > -1;
-			});
-		},
-
-		isValid: function isValid() {
-			return _Config2['default'].get('allowSelection') && this.isValidCount() && this.isValidTypes() && this.isValidExtensions();
-		}
-	});
-
-	exports['default'] = SelectedItemsStore;
-	module.exports = exports['default'];
-
-/***/ },
-/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -58791,7 +58747,7 @@
 
 
 /***/ },
-/* 363 */
+/* 362 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -58812,7 +58768,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 364 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -58833,7 +58789,7 @@
 
 	var _reactRedux = __webpack_require__(199);
 
-	var _containersBreadcrumbsContainer = __webpack_require__(365);
+	var _containersBreadcrumbsContainer = __webpack_require__(364);
 
 	var _containersBreadcrumbsContainer2 = _interopRequireDefault(_containersBreadcrumbsContainer);
 
@@ -58841,15 +58797,15 @@
 
 	var _storesFolderDataStore2 = _interopRequireDefault(_storesFolderDataStore);
 
-	var _storesBreadcrumbsStore = __webpack_require__(366);
+	var _storesBreadcrumbsStore = __webpack_require__(365);
 
 	var _storesBreadcrumbsStore2 = _interopRequireDefault(_storesBreadcrumbsStore);
 
-	var _storesUIStore = __webpack_require__(369);
+	var _storesUIStore = __webpack_require__(368);
 
 	var _storesUIStore2 = _interopRequireDefault(_storesUIStore);
 
-	var _containersFolderSearch = __webpack_require__(370);
+	var _containersFolderSearch = __webpack_require__(369);
 
 	var _containersFolderSearch2 = _interopRequireDefault(_containersFolderSearch);
 
@@ -58863,11 +58819,11 @@
 
 	var _reactBootstrap = __webpack_require__(275);
 
-	var _DelayedRender = __webpack_require__(374);
+	var _DelayedRender = __webpack_require__(373);
 
 	var _DelayedRender2 = _interopRequireDefault(_DelayedRender);
 
-	var _utilsNodeInRoot = __webpack_require__(375);
+	var _utilsNodeInRoot = __webpack_require__(374);
 
 	var _utilsNodeInRoot2 = _interopRequireDefault(_utilsNodeInRoot);
 
@@ -59043,7 +58999,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 365 */
+/* 364 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59066,11 +59022,11 @@
 
 	var _actionsNavigation2 = _interopRequireDefault(_actionsNavigation);
 
-	var _storesBreadcrumbsStore = __webpack_require__(366);
+	var _storesBreadcrumbsStore = __webpack_require__(365);
 
 	var _storesBreadcrumbsStore2 = _interopRequireDefault(_storesBreadcrumbsStore);
 
-	var _viewsBreadcrumbs = __webpack_require__(367);
+	var _viewsBreadcrumbs = __webpack_require__(366);
 
 	var _viewsBreadcrumbs2 = _interopRequireDefault(_viewsBreadcrumbs);
 
@@ -59113,7 +59069,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 366 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59189,7 +59145,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 367 */
+/* 366 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59204,7 +59160,7 @@
 
 	var _reactAddons2 = _interopRequireDefault(_reactAddons);
 
-	var _Truncator = __webpack_require__(368);
+	var _Truncator = __webpack_require__(367);
 
 	var _Truncator2 = _interopRequireDefault(_Truncator);
 
@@ -59292,7 +59248,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 368 */
+/* 367 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59354,7 +59310,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 369 */
+/* 368 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59411,7 +59367,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 370 */
+/* 369 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59432,15 +59388,15 @@
 
 	var _reflux2 = _interopRequireDefault(_reflux);
 
-	var _viewsAutoComplete = __webpack_require__(371);
+	var _viewsAutoComplete = __webpack_require__(370);
 
 	var _viewsAutoComplete2 = _interopRequireDefault(_viewsAutoComplete);
 
-	var _storesFolderListStore = __webpack_require__(372);
+	var _storesFolderListStore = __webpack_require__(371);
 
 	var _storesFolderListStore2 = _interopRequireDefault(_storesFolderListStore);
 
-	var _utilsEscapeRegExp = __webpack_require__(373);
+	var _utilsEscapeRegExp = __webpack_require__(372);
 
 	var _utilsEscapeRegExp2 = _interopRequireDefault(_utilsEscapeRegExp);
 
@@ -59500,7 +59456,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 371 */
+/* 370 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59521,7 +59477,7 @@
 
 	var _reactBootstrap2 = _interopRequireDefault(_reactBootstrap);
 
-	var _Truncator = __webpack_require__(368);
+	var _Truncator = __webpack_require__(367);
 
 	var _Truncator2 = _interopRequireDefault(_Truncator);
 
@@ -59789,7 +59745,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 372 */
+/* 371 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59849,7 +59805,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 373 */
+/* 372 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -59866,7 +59822,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 374 */
+/* 373 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59934,7 +59890,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 375 */
+/* 374 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -59957,7 +59913,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 376 */
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59976,7 +59932,7 @@
 
 	var _reflux2 = _interopRequireDefault(_reflux);
 
-	var _viewsFolderItemList = __webpack_require__(377);
+	var _viewsFolderItemList = __webpack_require__(376);
 
 	var _viewsFolderItemList2 = _interopRequireDefault(_viewsFolderItemList);
 
@@ -60008,7 +59964,7 @@
 
 	var _storesSearchStore2 = _interopRequireDefault(_storesSearchStore);
 
-	var _storesUIStore = __webpack_require__(369);
+	var _storesUIStore = __webpack_require__(368);
 
 	var _storesUIStore2 = _interopRequireDefault(_storesUIStore);
 
@@ -60133,7 +60089,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 377 */
+/* 376 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60166,7 +60122,7 @@
 
 	var _actionsActions2 = _interopRequireDefault(_actionsActions);
 
-	var _containersFolderItemContainer = __webpack_require__(378);
+	var _containersFolderItemContainer = __webpack_require__(377);
 
 	var _containersFolderItemContainer2 = _interopRequireDefault(_containersFolderItemContainer);
 
@@ -60465,7 +60421,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 378 */
+/* 377 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60512,7 +60468,7 @@
 
 	var _storesFolderItemsStore2 = _interopRequireDefault(_storesFolderItemsStore);
 
-	var _storesSelectedItemsStore = __webpack_require__(361);
+	var _storesSelectedItemsStore = __webpack_require__(378);
 
 	var _storesSelectedItemsStore2 = _interopRequireDefault(_storesSelectedItemsStore);
 
@@ -60725,6 +60681,81 @@
 	module.exports = exports['default'];
 
 /***/ },
+/* 378 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _reflux = __webpack_require__(253);
+
+	var _reflux2 = _interopRequireDefault(_reflux);
+
+	var _immutable = __webpack_require__(354);
+
+	var _immutable2 = _interopRequireDefault(_immutable);
+
+	var _mixinsImmutableStoreMixin = __webpack_require__(355);
+
+	var _mixinsImmutableStoreMixin2 = _interopRequireDefault(_mixinsImmutableStoreMixin);
+
+	var _FolderItemsStore = __webpack_require__(339);
+
+	var _FolderItemsStore2 = _interopRequireDefault(_FolderItemsStore);
+
+	var _actionsActions = __webpack_require__(340);
+
+	var _actionsActions2 = _interopRequireDefault(_actionsActions);
+
+	var _Config = __webpack_require__(345);
+
+	var _Config2 = _interopRequireDefault(_Config);
+
+	var _state = {
+		data: _immutable2['default'].List(),
+		multi: false
+	};
+
+	var SelectedItemsStore = _reflux2['default'].createStore({
+
+		listenables: [_actionsActions2['default']],
+
+		mixins: [(0, _mixinsImmutableStoreMixin2['default'])(_state)],
+
+		isMulti: function isMulti() {
+			return _state.multi;
+		},
+
+		onDeleteSelected: function onDeleteSelected() {
+			_state.data = _state.data.clear();
+
+			this.trigger();
+		},
+
+		onMoveSelected: function onMoveSelected() {
+			_state.data = _state.data.clear();
+
+			this.trigger();
+		},
+
+		onDropItems: function onDropItems(items, target) {
+			_state.data = _state.data.filter(function (item) {
+				return items.indexOf(item.get('id')) === -1;
+			});
+
+			this.trigger();
+		}
+	});
+
+	exports['default'] = SelectedItemsStore;
+	module.exports = exports['default'];
+
+/***/ },
 /* 379 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -60748,7 +60779,7 @@
 
 	var _mixinsImmutableStoreMixin2 = _interopRequireDefault(_mixinsImmutableStoreMixin);
 
-	var _SelectedItemsStore = __webpack_require__(361);
+	var _SelectedItemsStore = __webpack_require__(378);
 
 	var _SelectedItemsStore2 = _interopRequireDefault(_SelectedItemsStore);
 
@@ -60818,11 +60849,11 @@
 
 	var _reactRedux = __webpack_require__(199);
 
-	var _Truncator = __webpack_require__(368);
+	var _Truncator = __webpack_require__(367);
 
 	var _Truncator2 = _interopRequireDefault(_Truncator);
 
-	var _classnames = __webpack_require__(362);
+	var _classnames = __webpack_require__(361);
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
@@ -61733,7 +61764,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _classnames = __webpack_require__(362);
+	var _classnames = __webpack_require__(361);
 
 	var _classnames2 = _interopRequireDefault(_classnames);
 
@@ -61934,7 +61965,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _utilsNodeInRoot = __webpack_require__(375);
+	var _utilsNodeInRoot = __webpack_require__(374);
 
 	var _utilsNodeInRoot2 = _interopRequireDefault(_utilsNodeInRoot);
 
@@ -62348,7 +62379,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _DelayedRender = __webpack_require__(374);
+	var _DelayedRender = __webpack_require__(373);
 
 	var _DelayedRender2 = _interopRequireDefault(_DelayedRender);
 
@@ -64492,7 +64523,7 @@
 
 	var _FolderItemsStore2 = _interopRequireDefault(_FolderItemsStore);
 
-	var _FolderListStore = __webpack_require__(372);
+	var _FolderListStore = __webpack_require__(371);
 
 	var _FolderListStore2 = _interopRequireDefault(_FolderListStore);
 
@@ -64785,7 +64816,7 @@
 
 	var _containersSidePanelContainer2 = _interopRequireDefault(_containersSidePanelContainer);
 
-	var _containersFolderSearch = __webpack_require__(370);
+	var _containersFolderSearch = __webpack_require__(369);
 
 	var _containersFolderSearch2 = _interopRequireDefault(_containersFolderSearch);
 
@@ -65207,7 +65238,7 @@
 
 	var _FullHeightScroller2 = _interopRequireDefault(_FullHeightScroller);
 
-	var _Truncator = __webpack_require__(368);
+	var _Truncator = __webpack_require__(367);
 
 	var _Truncator2 = _interopRequireDefault(_Truncator);
 
@@ -65274,7 +65305,7 @@
 
 	var _SidePanelContainer2 = _interopRequireDefault(_SidePanelContainer);
 
-	var _FolderItemContainer = __webpack_require__(378);
+	var _FolderItemContainer = __webpack_require__(377);
 
 	var _FolderItemContainer2 = _interopRequireDefault(_FolderItemContainer);
 
@@ -65399,7 +65430,7 @@
 
 	var _SidePanelContainer2 = _interopRequireDefault(_SidePanelContainer);
 
-	var _FolderItemContainer = __webpack_require__(378);
+	var _FolderItemContainer = __webpack_require__(377);
 
 	var _FolderItemContainer2 = _interopRequireDefault(_FolderItemContainer);
 
@@ -65415,7 +65446,7 @@
 
 	var _actionsActions2 = _interopRequireDefault(_actionsActions);
 
-	var _containersFolderSearch = __webpack_require__(370);
+	var _containersFolderSearch = __webpack_require__(369);
 
 	var _containersFolderSearch2 = _interopRequireDefault(_containersFolderSearch);
 
