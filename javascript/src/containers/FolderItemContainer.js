@@ -114,7 +114,7 @@ const FolderItemContainer = React.createClass({
 			this.props.dragAndDropActions.dragSelectedItems(this.props.selectedItems.data);
 		}
 		else {
-			Actions.dragItem(this.props.data)
+			this.props.dragAndDropActions.dragItem(this.props.data)
 		}
 	},
 

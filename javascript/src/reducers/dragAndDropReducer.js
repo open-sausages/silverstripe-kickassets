@@ -26,6 +26,11 @@ export default function dragAndDropReducer(state = initialState, action) {
                 items: action.payload.items,
                 isDragging: true
             });
+		case DRAG_AND_DROP.DRAG_ITEM:
+			return Object.assign({}, state, {
+				items: action.payload.items,
+				isDragging: true
+			});
 		default:
 			return state;
 	}
