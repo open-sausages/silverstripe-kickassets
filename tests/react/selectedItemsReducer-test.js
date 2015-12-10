@@ -78,4 +78,50 @@ describe('selectedItemsReducer', () => {
 		});
 	});
 
+	describe('GROUP_SELECT', () => {
+		it('should clear the list when tring to select a group while in single-select mode', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: false
+			};
+
+			const result = selectedItemsReducer(state, { type: 'GROUP_SELECT', payload: [{ id: 3 }, { id: 4 }] });
+
+			expect(result.data.length).toBe(0);
+		});
+
+		it('should not deselect currently selected items', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: true
+			};
+
+			const result = selectedItemsReducer(state, { type: 'GROUP_SELECT', payload: [{ id: 3 }] });
+
+			expect(result.data[2].id).toBe(3);
+		});
+
+		it('should not select items twice', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: true
+			};
+
+			const result = selectedItemsReducer(state, { type: 'GROUP_SELECT', payload: [{ id: 3 }] });
+
+			expect(result.data.length).toBe(3);
+		});
+
+		it('should add any item which are currently selected to the selected items list', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: true
+			};
+
+			const result = selectedItemsReducer(state, { type: 'GROUP_SELECT', payload: [{ id: 4 }, { id: 5 }] });
+
+			expect(result.data.length).toBe(5);
+		});
+	});
+
 });

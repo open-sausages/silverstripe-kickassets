@@ -25309,9 +25309,10 @@
 
 	exports.CONFIG = CONFIG;
 	var SELECTED_ITEMS = {
-		ACTIVATE_MULTISELECT: 'SELECTED_ITEMS.ACTIVATE_MULTISELECT',
+		ACTIVATE_MULTISELECT: 'ACTIVATE_MULTISELECT',
 		DEACTIVATE_MULTISELECT: 'DEACTIVATE_MULTISELECT',
-		TOGGLE_SELECTED: 'TOGGLE_SELECTED'
+		TOGGLE_SELECTED: 'TOGGLE_SELECTED',
+		GROUP_SELECT: 'GROUP_SELECT'
 	};
 	exports.SELECTED_ITEMS = SELECTED_ITEMS;
 
@@ -25344,11 +25345,27 @@
 	};
 
 	/**
+	 * @func findItemById
+	 * @param array items - The list of items to search.
+	 * @param number id - The id to find.
+	 * @return object|undefined
+	 * @private
+	 *
+	 * @desc Attempts to find and return an item by its id.
+	 */
+	function findItemById(items, id) {
+		return items.find(function (item) {
+			return item.id === id;
+		});
+	}
+
+	/**
 	 * @func selectedItemsReducer
 	 * @param object initialState
 	 * @param object action - The dispatched action.
 	 * @param string action.type - Name of the dispatched action.
 	 * @param object [action.payload] - Optional data passed with the action.
+	 *
 	 * @desc Reducer for the `selectedItems` section of state.
 	 */
 
@@ -25367,9 +25384,7 @@
 			case _constantsActionTypes.SELECTED_ITEMS.TOGGLE_SELECTED:
 				var selectedItemsList = (0, _clone2['default'])(state.data),
 				    // Make a clone so we don't mutate the current state.
-				item = selectedItemsList.find(function (item) {
-					return item.id === action.payload.id;
-				});
+				item = findItemById(selectedItemsList, action.payload.id);
 
 				// The user has deselected an item while in multi-select mode.
 				if (typeof item !== 'undefined' && state.multi === true) {
@@ -25391,6 +25406,34 @@
 								// The list should only have the newly selected item in it.
 								selectedItemsList = [{ id: action.payload.id }];
 							}
+
+				return Object.assign({}, state, {
+					data: selectedItemsList
+				});
+			case _constantsActionTypes.SELECTED_ITEMS.GROUP_SELECT:
+				var selectedItemsList = (0, _clone2['default'])(state.data); // Make a clone so we don't mutate the current state.
+
+				// The user is attempting to select multiple items while in single-select mode.
+				if (state.multi === false) {
+					// Deselect everything.
+					selectedItemsList = [];
+				}
+				// The user is selecting multiple items in multi-select mode.
+				else {
+						// Select items in the payload which are currently unselected,
+						// ignoring those item which are selected already.
+						action.payload.forEach(function (payloadItem) {
+							var currentlySelectedItem = findItemById(selectedItemsList, payloadItem.id);
+
+							// If the item is already selected, ignore it.
+							if (typeof currentlySelectedItem !== 'undefined') {
+								return;
+							}
+
+							// Select the item.
+							selectedItemsList.push(payloadItem);
+						});
+					}
 
 				return Object.assign({}, state, {
 					data: selectedItemsList
@@ -29668,12 +29711,14 @@
 	exports.activateMultiSelect = activateMultiSelect;
 	exports.deactivateMultiSelect = deactivateMultiSelect;
 	exports.toggleSelectionOnItem = toggleSelectionOnItem;
+	exports.groupSelect = groupSelect;
 
 	var _constantsActionTypes = __webpack_require__(223);
 
 	/**
 	 * @func activateMultiSelect
 	 * @return function
+	 *
 	 * @desc Activates multiselect.
 	 */
 
@@ -29688,6 +29733,7 @@
 	/**
 	 * @func deactivateMultiSelect
 	 * @return function
+	 *
 	 * @desc Dectivates multiselect.
 	 */
 
@@ -29701,7 +29747,9 @@
 
 	/**
 	 * @func toggleSelectionOnItem
+	 * @param number id
 	 * @return function
+	 *
 	 * @desc Toggles the selected state of an item.
 	 */
 
@@ -29710,6 +29758,28 @@
 			return dispatch({
 				type: _constantsActionTypes.SELECTED_ITEMS.TOGGLE_SELECTED,
 				payload: { id: id }
+			});
+		};
+	}
+
+	/**
+	 * @func groupSelect
+	 * @param array ids
+	 * @return function
+	 *
+	 * @desc Selects a group of items.
+	 */
+
+	function groupSelect(ids) {
+		return function (dispatch, getState) {
+			// Transform the ids into a consistant format for the reducer.
+			var parsedIdsList = ids.map(function (id) {
+				return { id: parseInt(id, 10) };
+			});
+
+			return dispatch({
+				type: _constantsActionTypes.SELECTED_ITEMS.GROUP_SELECT,
+				payload: parsedIdsList
 			});
 		};
 	}
@@ -38715,7 +38785,6 @@
 		'addFile': {},
 		'removeFile': {},
 		'insertFolder': {},
-		'groupSelect': {},
 		'clearSelection': {},
 		'beginUploading': {},
 		'endUploading': {},
@@ -58586,33 +58655,6 @@
 
 		mixins: [(0, _mixinsImmutableStoreMixin2['default'])(_state)],
 
-		onGroupSelect: function onGroupSelect(ids) {
-			var _this = this;
-
-			if (!_state.multi) {
-				_state.data = _state.data.clear();
-			}
-
-			ids.forEach(function (id) {
-				var index = _this.indexForID(id);
-				var found = index > -1;
-
-				if (found) {
-					return;
-				}
-
-				var folderItem = _FolderItemsStore2['default'].getByID(id);
-
-				if (!folderItem) {
-					return;
-				}
-
-				_state.data = _state.data.push(folderItem);
-			});
-
-			this.trigger();
-		},
-
 		onClearSelection: function onClearSelection() {
 			var newData = _state.data.clear();
 
@@ -60089,6 +60131,8 @@
 		value: true
 	});
 
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var _reactAddons = __webpack_require__(232);
@@ -60098,6 +60142,12 @@
 	var _reflux = __webpack_require__(253);
 
 	var _reflux2 = _interopRequireDefault(_reflux);
+
+	var _redux = __webpack_require__(207);
+
+	var _actionsSelectedItemsActions = __webpack_require__(250);
+
+	var selectedItemsActions = _interopRequireWildcard(_actionsSelectedItemsActions);
 
 	var _reactRedux = __webpack_require__(199);
 
@@ -60298,14 +60348,21 @@
 			return document.getElementById('item_' + key);
 		},
 
-		handleSelction: function handleSelction(keys) {
-			_actionsActions2['default'].groupSelect(keys);
+		/**
+	  * @func handleSelction
+	  * @param array ids - List of ids.
+	  *
+	  * @desc Handles the selection of multiple items.
+	  */
+		handleSelction: function handleSelction(ids) {
+			this.props.actions.groupSelect(ids);
 		},
 
 		/**
 	  * @func itemIsSelected
 	  * @param number id
 	  * @return boolean
+	  *
 	  * @desc Checks if the item with the passed id is selected.
 	  */
 		itemIsSelected: function itemIsSelected(id) {
@@ -60387,7 +60444,13 @@
 		};
 	}
 
-	exports['default'] = (0, _reactRedux.connect)(mapStateToProps)(FolderItemList);
+	function mapDispatchToProps(dispatch) {
+		return {
+			actions: (0, _redux.bindActionCreators)(selectedItemsActions, dispatch)
+		};
+	}
+
+	exports['default'] = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(FolderItemList);
 	module.exports = exports['default'];
 
 /***/ },

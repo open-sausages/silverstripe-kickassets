@@ -16,32 +16,7 @@ const SelectedItemsStore = Reflux.createStore({
 
 	mixins: [ImmutableStoreMixin(_state)],
 
-	onGroupSelect (ids) {
-		if(!_state.multi) {
-			_state.data = _state.data.clear();
-		}
-
-		ids.forEach(id => {
-			const index = this.indexForID(id);
-			const found = (index > -1);
-
-			if(found) {
-				return;
-			}
-
-			const folderItem = FolderItemsStore.getByID(id);
-
-			if(!folderItem) {
-				return;
-			}
-
-			_state.data = _state.data.push(folderItem);
-		});
-
-		this.trigger();
-	},
-
-	onClearSelection () {		
+	onClearSelection () {
 		const newData = _state.data.clear();
 
 		if(newData !== _state.data) {
@@ -73,7 +48,7 @@ const SelectedItemsStore = Reflux.createStore({
 	},
 
 	isValidCount () {
-		if(!!Config.get('maxSelection')) {			
+		if(!!Config.get('maxSelection')) {
 			return Config.get('maxSelection') >= _state.data.count();
 		}
 

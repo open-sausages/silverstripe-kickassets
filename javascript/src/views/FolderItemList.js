@@ -1,5 +1,7 @@
 import React from 'react/addons';
 import Reflux from 'reflux';
+import { bindActionCreators } from 'redux';
+import * as selectedItemsActions from '../actions/selectedItemsActions';
 import { connect } from 'react-redux';
 import Actions from '../actions/Actions';
 import FolderItemContainer from '../containers/FolderItemContainer';
@@ -173,14 +175,21 @@ const FolderItemList = React.createClass({
 		return document.getElementById(`item_${key}`);
 	},
 
-	handleSelction (keys) {
-		Actions.groupSelect(keys);
+	/**
+	 * @func handleSelction
+	 * @param array ids - List of ids.
+	 *
+	 * @desc Handles the selection of multiple items.
+	 */
+	handleSelction (ids) {
+		this.props.actions.groupSelect(ids);
 	},
 
 	/**
 	 * @func itemIsSelected
 	 * @param number id
 	 * @return boolean
+	 *
 	 * @desc Checks if the item with the passed id is selected.
 	 */
 	itemIsSelected(id) {
@@ -260,4 +269,10 @@ function mapStateToProps(state) {
 	}
 }
 
-export default connect(mapStateToProps)(FolderItemList);
+function mapDispatchToProps(dispatch) {
+	return {
+		actions: bindActionCreators(selectedItemsActions, dispatch)
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(FolderItemList);
