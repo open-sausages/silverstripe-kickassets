@@ -139,7 +139,7 @@ const FolderItemList = React.createClass({
 		}
 
 		if(scroller && !file) {
-			Actions.clearSelection();
+			this.props.actions.clearSelection();
 		}
 
 	},

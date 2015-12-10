@@ -25312,7 +25312,8 @@
 		ACTIVATE_MULTISELECT: 'ACTIVATE_MULTISELECT',
 		DEACTIVATE_MULTISELECT: 'DEACTIVATE_MULTISELECT',
 		TOGGLE_SELECTED: 'TOGGLE_SELECTED',
-		GROUP_SELECT: 'GROUP_SELECT'
+		GROUP_SELECT: 'GROUP_SELECT',
+		CLEAR_SELECTION: 'CLEAR_SELECTION'
 	};
 	exports.SELECTED_ITEMS = SELECTED_ITEMS;
 
@@ -25437,6 +25438,10 @@
 
 				return Object.assign({}, state, {
 					data: selectedItemsList
+				});
+			case _constantsActionTypes.SELECTED_ITEMS.CLEAR_SELECTION:
+				return Object.assign({}, state, {
+					data: []
 				});
 			default:
 				return state;
@@ -29712,6 +29717,7 @@
 	exports.deactivateMultiSelect = deactivateMultiSelect;
 	exports.toggleSelectionOnItem = toggleSelectionOnItem;
 	exports.groupSelect = groupSelect;
+	exports.clearSelection = clearSelection;
 
 	var _constantsActionTypes = __webpack_require__(223);
 
@@ -29780,6 +29786,21 @@
 			return dispatch({
 				type: _constantsActionTypes.SELECTED_ITEMS.GROUP_SELECT,
 				payload: parsedIdsList
+			});
+		};
+	}
+
+	/**
+	 * @func clearSelection
+	 * @return function
+	 *
+	 * @desc Deselects all currently selected items.
+	 */
+
+	function clearSelection() {
+		return function (dispatch, getState) {
+			return dispatch({
+				type: _constantsActionTypes.SELECTED_ITEMS.CLEAR_SELECTION
 			});
 		};
 	}
@@ -38785,7 +38806,6 @@
 		'addFile': {},
 		'removeFile': {},
 		'insertFolder': {},
-		'clearSelection': {},
 		'beginUploading': {},
 		'endUploading': {},
 		'replaceDetailItem': {},
@@ -58655,15 +58675,6 @@
 
 		mixins: [(0, _mixinsImmutableStoreMixin2['default'])(_state)],
 
-		onClearSelection: function onClearSelection() {
-			var newData = _state.data.clear();
-
-			if (newData !== _state.data) {
-				_state.data = newData;
-				this.trigger();
-			}
-		},
-
 		isMulti: function isMulti() {
 			return _state.multi;
 		},
@@ -60316,7 +60327,7 @@
 			}
 
 			if (scroller && !file) {
-				_actionsActions2['default'].clearSelection();
+				this.props.actions.clearSelection();
 			}
 		},
 
@@ -60546,7 +60557,7 @@
 			if (this.props.data.get('type') === 'folder') {
 				_actionsNavigation2['default'].goToFolder(this.props.data.get('id'));
 			} else {
-				_actionsActions2['default'].clearSelection();
+				this.props.actions.clearSelection();
 				_actionsNavigation2['default'].goToEditItem(this.props.data.toJS());
 			}
 		},
@@ -60683,7 +60694,7 @@
 				onClick: this.handleClick,
 				onDoubleClick: this.handleDoubleClick,
 				onFilenameUpdated: this.handleFilenameUpdated,
-				onEditFilename: _actionsActions2['default'].clearSelection,
+				onEditFilename: this.props.actions.clearSelection,
 				onClearError: this.handleClearError,
 				onEdit: this.handleEdit,
 				onMove: this.handleMove,

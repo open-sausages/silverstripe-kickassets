@@ -45,7 +45,7 @@ const FolderItemContainer = React.createClass({
 			Navigation.goToFolder(this.props.data.get('id'));
 		}
 		else {
-			Actions.clearSelection();
+			this.props.actions.clearSelection();
 			Navigation.goToEditItem(this.props.data.toJS());
 		}
 	},
@@ -193,7 +193,7 @@ const FolderItemContainer = React.createClass({
 					onClick={this.handleClick}
 					onDoubleClick={this.handleDoubleClick}
 					onFilenameUpdated={this.handleFilenameUpdated}
-					onEditFilename={Actions.clearSelection}
+					onEditFilename={this.props.actions.clearSelection}
 					onClearError={this.handleClearError}
 					onEdit={this.handleEdit}
 					onMove={this.handleMove}

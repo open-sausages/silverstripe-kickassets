@@ -16,15 +16,6 @@ const SelectedItemsStore = Reflux.createStore({
 
 	mixins: [ImmutableStoreMixin(_state)],
 
-	onClearSelection () {
-		const newData = _state.data.clear();
-
-		if(newData !== _state.data) {
-			_state.data = newData;
-			this.trigger();
-		}
-	},
-
 	isMulti () {
 		return _state.multi;
 	},

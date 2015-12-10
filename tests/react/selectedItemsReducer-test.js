@@ -124,4 +124,28 @@ describe('selectedItemsReducer', () => {
 		});
 	});
 
+	describe('CLEAR_SELECTION', () => {
+		it('should deselect all currently selected items in multi-select mode', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: true
+			};
+
+			const result = selectedItemsReducer(state, { type: 'CLEAR_SELECTION' });
+
+			expect(result.data.length).toBe(0);
+		});
+
+		it('should deselect all currently selected items in single-select mode', () => {
+			const state = {
+				data: [{ id: 1 }, { id: 2 }, { id: 3 }],
+				multi: false
+			};
+
+			const result = selectedItemsReducer(state, { type: 'CLEAR_SELECTION' });
+
+			expect(result.data.length).toBe(0);
+		});
+	});
+
 });

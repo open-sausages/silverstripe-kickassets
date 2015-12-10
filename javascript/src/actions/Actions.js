@@ -21,7 +21,6 @@ const Actions = Reflux.createActions({
 	'addFile': {},
 	'removeFile': {},
 	'insertFolder': {},
-	'clearSelection': {},
 	'beginUploading': {},
 	'endUploading': {},
 	'replaceDetailItem': {},

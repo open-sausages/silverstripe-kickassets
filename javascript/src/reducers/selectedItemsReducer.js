@@ -100,6 +100,10 @@ export default function selectedItemsReducer(state = initialState, action) {
 			return Object.assign({}, state, {
 				data: selectedItemsList
 			});
+		case SELECTED_ITEMS.CLEAR_SELECTION:
+			return Object.assign({}, state, {
+				data: []
+			});
 		default:
 			return state;
 	}

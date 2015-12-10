@@ -68,3 +68,17 @@ export function groupSelect(ids) {
 		});
 	};
 }
+
+/**
+ * @func clearSelection
+ * @return function
+ *
+ * @desc Deselects all currently selected items.
+ */
+export function clearSelection() {
+	return (dispatch, getState) => {
+		return dispatch({
+			type: SELECTED_ITEMS.CLEAR_SELECTION
+		});
+	};
+}
