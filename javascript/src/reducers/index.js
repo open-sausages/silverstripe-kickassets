@@ -6,6 +6,7 @@ import { combineReducers } from 'redux';
 import configReducer from './configReducer';
 import selectedItemsReducer from './selectedItemsReducer';
 import dragAndDropReducer from './dragAndDropReducer';
+import searchReducer from './searchReducer';
 
 /**
  * @func rootReducer
@@ -18,7 +19,8 @@ import dragAndDropReducer from './dragAndDropReducer';
 const rootReducer = combineReducers({
 	config: configReducer,
 	selectedItems: selectedItemsReducer,
-	dragAndDrop: dragAndDropReducer
+	dragAndDrop: dragAndDropReducer,
+	search: searchReducer
 });
 
 export default rootReducer;

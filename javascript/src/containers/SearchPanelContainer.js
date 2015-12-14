@@ -1,24 +1,18 @@
 import React from 'react/addons';
-import Reflux from 'reflux';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 import SidePanelContainer from './SidePanelContainer';
 import FolderItemContainer from './FolderItemContainer';
+import * as searchActions from '../actions/searchActions';
 import SearchStore from '../stores/SearchStore';
 import Router from 'react-router';
 import Actions from '../actions/Actions';
 import Loader from '../views/Loader';
 import _t, {sf} from '../utils/lang';
 
-const getStoreState = () => {
-	return {
-		searchItems: SearchStore.get('data'),
-		loading: SearchStore.get('loading')
-	}
-};
-
 const SearchPanelContainer = React.createClass({
-	
+
 	mixins: [
-		Reflux.ListenerMixin,
 		React.addons.PureRenderMixin
 	],
 
@@ -26,26 +20,22 @@ const SearchPanelContainer = React.createClass({
 		routerParams: React.PropTypes.object.isRequired
 	},
 
-	getInitialState () {
-		return getStoreState();
-	},
-
 	componentDidMount () {
 		const term = this.props.routerParams.get('search');
-		this.listenTo(SearchStore, this.onSearchChanged);		
-		if(term) {		
-			Actions.search(term);
+		// this.listenTo(SearchStore, this.onSearchChanged);
+		if(term) {
+			this.props.actions.fetchSearchResults(term);
 		}
 	},
 
 	componentWillReceiveProps (nextProps) {
 		if(this.getTermFromProps() !== this.getTermFromProps(nextProps)) {
-			Actions.search(nextProps.routerParams.get('search'));
+			this.props.actions.fetchSearchResults(nextProps.routerParams.get('search'));
 		}
 	},
 
 	onSearchChanged () {
-		this.setState(getStoreState());
+		// this.setState(getStoreState());
 	},
 
 	getTermFromProps (props) {
@@ -54,11 +44,11 @@ const SearchPanelContainer = React.createClass({
 	},
 
 	render () {
-		const items = this.state.searchItems;
+		const items = this.props.items;
 		return (
 			<SidePanelContainer title={sf(_t('KickAssets.SEARCHFOR','Search for %s'), this.getTermFromProps())}>
 				{() => {
-					if(this.state.loading) {
+					if(this.props.isFetching) {
 						return <Loader type='bounce' />
 					}
 					if(!items.count()) {
@@ -70,7 +60,7 @@ const SearchPanelContainer = React.createClass({
 								return <FolderItemContainer key={item.id} data={item} />
 							})}
 						</div>
-					);					
+					);
 				}()}
 			</SidePanelContainer>
 		);
@@ -78,4 +68,18 @@ const SearchPanelContainer = React.createClass({
 
 });
 
-export default SearchPanelContainer;
+function mapStateToProps(state) {
+	return {
+		term: state.search.term,
+		items: state.search.items,
+		isFetching: state.search.isFetching
+	}
+}
+
+function mapDispatchToProps(dispatch) {
+	return {
+		actions: bindActionCreators(searchActions, dispatch)
+	}
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(SearchPanelContainer);
